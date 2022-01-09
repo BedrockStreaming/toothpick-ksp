@@ -26,7 +26,7 @@ import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Types
 
 /** Common base interface for all code generators.  */
-abstract class CodeGenerator(protected var typeUtil: Types) {
+abstract class CodeGenerator(protected val typeUtil: Types) {
 
     /**
      * Creates all java code.
@@ -38,24 +38,21 @@ abstract class CodeGenerator(protected var typeUtil: Types) {
     protected fun getInvokeScopeGetMethodWithNameCodeBlock(
         paramInjectionTarget: ParamInjectionTarget
     ): CodeBlock {
-        val scopeGetMethodName: String
         val injectionName = if (paramInjectionTarget.name == null) ""
         else ", \"${paramInjectionTarget.name}\""
-        val className: ClassName
-        when (paramInjectionTarget.kind) {
-            ParamInjectionTarget.Kind.INSTANCE -> {
-                scopeGetMethodName = "getInstance"
-                className = ClassName.get(paramInjectionTarget.memberClass)
-            }
-            ParamInjectionTarget.Kind.PROVIDER -> {
-                scopeGetMethodName = "getProvider"
-                className = ClassName.get(paramInjectionTarget.kindParamClass)
-            }
-            ParamInjectionTarget.Kind.LAZY -> {
-                scopeGetMethodName = "getLazy"
-                className = ClassName.get(paramInjectionTarget.kindParamClass)
-            }
-            else -> throw IllegalStateException("The kind can't be null.")
+
+        checkNotNull(paramInjectionTarget.kind) { "The kind can't be null." }
+
+        val scopeGetMethodName: String = when (paramInjectionTarget.kind) {
+            ParamInjectionTarget.Kind.INSTANCE -> "getInstance"
+            ParamInjectionTarget.Kind.PROVIDER -> "getProvider"
+            ParamInjectionTarget.Kind.LAZY -> "getLazy"
+        }
+
+        val className: ClassName = when (paramInjectionTarget.kind) {
+            ParamInjectionTarget.Kind.INSTANCE -> ClassName.get(paramInjectionTarget.memberClass)
+            ParamInjectionTarget.Kind.PROVIDER -> ClassName.get(paramInjectionTarget.kindParamClass)
+            ParamInjectionTarget.Kind.LAZY -> ClassName.get(paramInjectionTarget.kindParamClass)
         }
 
         return CodeBlock.builder()
@@ -64,13 +61,15 @@ abstract class CodeGenerator(protected var typeUtil: Types) {
     }
 
     protected fun getParamType(paramInjectionTarget: ParamInjectionTarget): TypeName {
-        return if (paramInjectionTarget.kind === ParamInjectionTarget.Kind.INSTANCE) {
-            TypeName.get(typeUtil.erasure(paramInjectionTarget.memberClass.asType()))
-        } else {
-            ParameterizedTypeName.get(
-                ClassName.get(paramInjectionTarget.memberClass),
-                ClassName.get(typeUtil.erasure(paramInjectionTarget.kindParamClass.asType()))
-            )
+        return when (paramInjectionTarget.kind) {
+            ParamInjectionTarget.Kind.INSTANCE ->
+                TypeName.get(typeUtil.erasure(paramInjectionTarget.memberClass.asType()))
+            else -> {
+                ParameterizedTypeName.get(
+                    ClassName.get(paramInjectionTarget.memberClass),
+                    ClassName.get(typeUtil.erasure(paramInjectionTarget.kindParamClass.asType()))
+                )
+            }
         }
     }
 
@@ -84,43 +83,42 @@ abstract class CodeGenerator(protected var typeUtil: Types) {
         protected val LINE_SEPARATOR: String = System.getProperty("line.separator")
 
         @JvmStatic
-        protected fun getGeneratedFQNClassName(typeElement: TypeElement): String {
-            return getGeneratedPackageName(typeElement) + "." + getGeneratedSimpleClassName(typeElement)
-        }
+        protected fun getGeneratedFQNClassName(typeElement: TypeElement): String =
+            "${getGeneratedPackageName(typeElement)}.${getGeneratedSimpleClassName(typeElement)}"
 
         @JvmStatic
         protected fun getGeneratedSimpleClassName(typeElement: TypeElement): String {
-            var typeElement = typeElement
-            var result = typeElement.simpleName.toString()
+            var currentTypeElement = typeElement
+            var result = currentTypeElement.simpleName.toString()
             // deals with inner classes
-            while (typeElement.enclosingElement.kind != ElementKind.PACKAGE) {
-                result = typeElement.enclosingElement.simpleName.toString() + "$" + result
-                typeElement = typeElement.enclosingElement as TypeElement
+            while (currentTypeElement.enclosingElement.kind != ElementKind.PACKAGE) {
+                result = "${currentTypeElement.enclosingElement.simpleName}$$result"
+                currentTypeElement = currentTypeElement.enclosingElement as TypeElement
             }
             return result
         }
 
         @JvmStatic
         protected fun getSimpleClassName(className: ClassName): String {
-            var result = ""
-            val simpleNames = className.simpleNames()
-            for (i in simpleNames.indices) {
-                val name = simpleNames[i]
-                result += name
-                if (i != simpleNames.size - 1) {
-                    result += "."
+            return buildString {
+                val simpleNames = className.simpleNames()
+                for (i in simpleNames.indices) {
+                    val name = simpleNames[i]
+                    append(name)
+                    if (i != simpleNames.size - 1) {
+                        append(".")
+                    }
                 }
             }
-            return result
         }
 
         protected fun getGeneratedPackageName(typeElement: TypeElement): String {
             // deals with inner classes
-            var typeElement = typeElement
-            while (typeElement.enclosingElement.kind != ElementKind.PACKAGE) {
-                typeElement = typeElement.enclosingElement as TypeElement
+            var currentTypeElement = typeElement
+            while (currentTypeElement.enclosingElement.kind != ElementKind.PACKAGE) {
+                currentTypeElement = currentTypeElement.enclosingElement as TypeElement
             }
-            return typeElement.enclosingElement.toString()
+            return currentTypeElement.enclosingElement.toString()
         }
     }
 }
