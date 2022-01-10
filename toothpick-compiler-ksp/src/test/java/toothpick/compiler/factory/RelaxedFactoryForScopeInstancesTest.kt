@@ -23,7 +23,7 @@ import org.junit.Test
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryAndMemberInjectorProcessors
 import javax.tools.StandardLocation
 
-class RelaxedFactoryForScopeInstancesTest : BaseFactoryTest() {
+class RelaxedFactoryForScopeInstancesTest {
 
     @Test
     fun testOptimisticFactoryCreationForHasScopeInstances_shouldFail_whenThereIsNoScopeAnnotation() {

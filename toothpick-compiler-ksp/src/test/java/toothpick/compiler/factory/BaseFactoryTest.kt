@@ -16,43 +16,24 @@
  */
 package toothpick.compiler.factory
 
-import com.google.common.truth.Truth
-import com.google.testing.compile.JavaSourceSubjectFactory
-import org.hamcrest.CoreMatchers
-import org.hamcrest.MatcherAssert.assertThat
+import com.tschuchort.compiletesting.SourceFile
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
-import javax.tools.JavaFileObject
-import javax.tools.StandardLocation
+import toothpick.compiler.*
 
-open class BaseFactoryTest {
+fun assertThatCompileWithoutErrorButNoFactoryIsCreated(
+    source: SourceFile,
+    noFactoryClass: String
+) {
+    try {
+        compilationAssert()
+            .that(source)
+            .processedWith(ProcessorTestUtilities.factoryAndMemberInjectorProcessors())
+            .compilesWithoutError()
+            .generatesFileNamed("${noFactoryClass}__Factory.class")
 
-    protected fun assertThatCompileWithoutErrorButNoFactoryIsCreated(
-        source: JavaFileObject?,
-        noFactoryPackageName: String?,
-        noFactoryClass: String
-    ) {
-        try {
-            Truth.assert_()
-                .about(JavaSourceSubjectFactory.javaSource())
-                .that(source)
-                .processedWith(ProcessorTestUtilities.factoryAndMemberInjectorProcessors())
-                .compilesWithoutError()
-                .and()
-                .generatesFileNamed(
-                    StandardLocation.locationFor("CLASS_OUTPUT"),
-                    "test",
-                    noFactoryClass + "__Factory.class"
-                )
-
-            fail("A factory was created when it shouldn't.")
-        } catch (e: AssertionError) {
-            assertThat(
-                e.message,
-                CoreMatchers.containsString(
-                    "generated the file named \"%s__Factory.class\" in package \"%s\";"
-                        .format(noFactoryClass, noFactoryPackageName)
-                )
-            )
-        }
+        fail("A factory was created when it shouldn't.")
+    } catch (e: Error) {
+        assertTrue(e is AssertionError)
     }
 }

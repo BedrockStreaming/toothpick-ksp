@@ -24,7 +24,7 @@ import toothpick.compiler.factory.ProcessorTestUtilities.factoryAndMemberInjecto
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryProcessors
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryProcessorsWithAdditionalTypes
 
-class FactoryTest : BaseFactoryTest() {
+class FactoryTest {
 
     @Test
     fun testEmptyConstructor_shouldWork_whenConstructorIsPublic() {

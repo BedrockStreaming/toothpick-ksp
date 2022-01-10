@@ -23,7 +23,7 @@ import org.junit.Test
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryAndMemberInjectorProcessors
 import javax.tools.StandardLocation
 
-class RelaxedFactoryForInjectConstructorTest : BaseFactoryTest() {
+class RelaxedFactoryForInjectConstructorTest {
 
     @Test
     fun testOptimisticFactoryCreationForInjectConstructor_shouldWork_whenDefaultConstructorIsPresent() {

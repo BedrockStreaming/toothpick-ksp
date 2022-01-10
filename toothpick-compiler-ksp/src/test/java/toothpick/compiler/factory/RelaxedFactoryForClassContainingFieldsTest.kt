@@ -16,14 +16,11 @@
  */
 package toothpick.compiler.factory
 
-import com.google.common.truth.Truth
-import com.google.testing.compile.JavaFileObjects
-import com.google.testing.compile.JavaSourceSubjectFactory
 import org.junit.Test
 import toothpick.compiler.*
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryAndMemberInjectorProcessors
 
-class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
+class RelaxedFactoryForClassContainingFieldsTest {
 
     @Test
     fun testRelaxedFactoryCreationForInjectedField() {
@@ -103,9 +100,8 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
 
     @Test
     fun testRelaxedFactoryCreationForInjectedField_shouldFail_WhenFieldIsPrivate() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectField",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectField",
             """
             package test;
             import javax.inject.Inject;
@@ -113,10 +109,10 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
               @Inject private Foo foo;
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .failsToCompile()
@@ -127,9 +123,8 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
 
     @Test
     fun testRelaxedFactoryCreationForInjectedField_shouldFail_WhenContainingClassIsPrivate() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectField",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectField",
             """
             package test;
             import javax.inject.Inject;
@@ -139,10 +134,10 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
               }
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .failsToCompile()
@@ -153,9 +148,8 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
 
     @Test
     fun testRelaxedFactoryCreationForInjectedField_shouldFail_WhenFieldIsInvalidLazy() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectField",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectField",
             """
             package test;
             import javax.inject.Inject;
@@ -164,10 +158,10 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
               @Inject Lazy foo;
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .failsToCompile()
@@ -178,9 +172,8 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
 
     @Test
     fun testRelaxedFactoryCreationForInjectedField_shouldFail_WhenFieldIsInvalidProvider() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectField",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectField",
             """
             package test;
             import javax.inject.Inject;
@@ -189,10 +182,10 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
               @Inject Provider foo;
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .failsToCompile()
@@ -203,9 +196,8 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
 
     @Test
     fun testRelaxedFactoryCreationForInjectedField_shouldWorkButNoFactoryIsProduced_whenTypeIsAbstract() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectField",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectField",
             """
             package test;
             import javax.inject.Inject;
@@ -213,18 +205,19 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
               @Inject Foo foo;
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
+
         assertThatCompileWithoutErrorButNoFactoryIsCreated(
-            source, "test", "TestRelaxedFactoryCreationForInjectField"
+            source = source,
+            noFactoryClass = "TestRelaxedFactoryCreationForInjectField"
         )
     }
 
     @Test
     fun testRelaxedFactoryCreationForInjectedField_shouldWorkButNoFactoryIsProduced_whenTypeHasANonDefaultConstructor() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectField",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectField",
             """
             package test;
             import javax.inject.Inject;
@@ -233,18 +226,19 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
               public TestRelaxedFactoryCreationForInjectField(String s) {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
+
         assertThatCompileWithoutErrorButNoFactoryIsCreated(
-            source, "test", "TestRelaxedFactoryCreationForInjectField"
+            source = source,
+            noFactoryClass = "TestRelaxedFactoryCreationForInjectField"
         )
     }
 
     @Test
     fun testRelaxedFactoryCreationForInjectedField_shouldWorkButNoFactoryIsProduced_whenTypeHasAPrivateDefaultConstructor() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectField",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectField",
             """
             package test;
             import javax.inject.Inject;
@@ -253,10 +247,12 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
               private TestRelaxedFactoryCreationForInjectField() {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
+
         assertThatCompileWithoutErrorButNoFactoryIsCreated(
-            source, "test", "TestRelaxedFactoryCreationForInjectField"
+            source = source,
+            noFactoryClass = "TestRelaxedFactoryCreationForInjectField"
         )
     }
 }

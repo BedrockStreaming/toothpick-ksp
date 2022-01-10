@@ -20,10 +20,9 @@ import com.google.common.truth.Truth
 import com.google.testing.compile.JavaFileObjects
 import com.google.testing.compile.JavaSourceSubjectFactory
 import org.junit.Test
-import toothpick.compiler.factory.BaseFactoryTest
 import toothpick.compiler.memberinjector.ProcessorTestUtilities.memberInjectorProcessorsFailingWhenMethodIsNotPackageVisible
 
-class RelaxedMemberInjectorWarningsTest : BaseFactoryTest() {
+class RelaxedMemberInjectorWarningsTest {
 
     @Test
     fun testInjectedMethod_shouldFailTheBuild_whenMethodIsPublic() {

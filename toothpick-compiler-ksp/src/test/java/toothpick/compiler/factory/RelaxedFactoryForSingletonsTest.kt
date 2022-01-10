@@ -24,7 +24,7 @@ import toothpick.compiler.factory.ProcessorTestUtilities.factoryAndMemberInjecto
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryProcessorsWithAdditionalTypes
 import javax.tools.StandardLocation
 
-class RelaxedFactoryForSingletonsTest : BaseFactoryTest() {
+class RelaxedFactoryForSingletonsTest {
 
     @Test
     fun testOptimisticFactoryCreationForSingleton() {

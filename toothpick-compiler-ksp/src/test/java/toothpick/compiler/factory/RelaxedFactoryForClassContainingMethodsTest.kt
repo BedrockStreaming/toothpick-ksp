@@ -21,8 +21,9 @@ import com.google.testing.compile.JavaFileObjects
 import com.google.testing.compile.JavaSourceSubjectFactory
 import org.junit.Test
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryAndMemberInjectorProcessors
+import toothpick.compiler.javaSource
 
-class RelaxedFactoryForClassContainingMethodsTest : BaseFactoryTest() {
+class RelaxedFactoryForClassContainingMethodsTest {
 
     @Test
     fun testRelaxedFactoryCreationForInjectedMethod() {
@@ -200,9 +201,8 @@ class RelaxedFactoryForClassContainingMethodsTest : BaseFactoryTest() {
 
     @Test
     fun testRelaxedFactoryCreationForInjectedMethod_shouldWorkButNoFactoryIsProduced_whenTypeIsAbstract() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectMethod",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectMethod",
             """
             package test;
             import javax.inject.Inject;
@@ -210,21 +210,19 @@ class RelaxedFactoryForClassContainingMethodsTest : BaseFactoryTest() {
               @Inject void m(Foo foo) {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
         assertThatCompileWithoutErrorButNoFactoryIsCreated(
             source = source,
-            noFactoryPackageName = "test",
             noFactoryClass = "TestRelaxedFactoryCreationForInjectMethod"
         )
     }
 
     @Test
     fun testRelaxedFactoryCreationForInjectedMethod_shouldWorkButNoFactoryIsProduced_whenTypeHasANonDefaultConstructor() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectMethod",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectMethod",
             """
             package test;
             import javax.inject.Inject;
@@ -233,21 +231,19 @@ class RelaxedFactoryForClassContainingMethodsTest : BaseFactoryTest() {
               public TestRelaxedFactoryCreationForInjectMethod(String s) {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
         assertThatCompileWithoutErrorButNoFactoryIsCreated(
             source = source,
-            noFactoryPackageName = "test",
             noFactoryClass = "TestRelaxedFactoryCreationForInjectMethod"
         )
     }
 
     @Test
     fun testRelaxedFactoryCreationForInjectedMethod_shouldWorkButNoFactoryIsProduced_whenTypeHasAPrivateDefaultConstructor() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectMethod",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectMethod",
             """
             package test;
             import javax.inject.Inject;
@@ -256,12 +252,11 @@ class RelaxedFactoryForClassContainingMethodsTest : BaseFactoryTest() {
               private TestRelaxedFactoryCreationForInjectMethod() {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
         assertThatCompileWithoutErrorButNoFactoryIsCreated(
             source = source,
-            noFactoryPackageName = "test",
             noFactoryClass = "TestRelaxedFactoryCreationForInjectMethod"
         )
     }

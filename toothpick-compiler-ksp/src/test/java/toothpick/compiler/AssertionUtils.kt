@@ -2,7 +2,7 @@ package toothpick.compiler
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
-import org.junit.Assert.assertEquals
+import org.junit.Assert.*
 import javax.annotation.processing.Processor
 
 data class Builder(
@@ -33,7 +33,24 @@ fun Builder.compilesWithoutError(): KotlinCompilation.Result = compile().apply {
     assertEquals(KotlinCompilation.ExitCode.OK, exitCode)
 }
 
+fun Builder.failsToCompile(): KotlinCompilation.Result = compile().apply {
+    assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, exitCode)
+}
+
+fun KotlinCompilation.Result.withErrorContaining(error: String): KotlinCompilation.Result = apply {
+    assertTrue(messages.contains(error))
+}
+
 fun KotlinCompilation.Result.assertGeneratesSource(expected: RawSource) = apply {
     val actual = sourcesGeneratedByAnnotationProcessor.first { file -> file.name == expected.fileName }
     assertEquals(expected.contents, actual.readText())
+}
+
+fun KotlinCompilation.Result.generatesFileNamed(
+    relativeName: String
+) = apply {
+    val generatedFile = generatedFiles.find { file ->
+        file.name == "$relativeName.class"
+    }
+    assertNotNull(generatedFile)
 }

@@ -22,7 +22,7 @@ import com.google.testing.compile.JavaSourceSubjectFactory
 import org.junit.Test
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryProcessorsFailingOnNonInjectableClasses
 
-class RelaxedFactoryWarningsTest : BaseFactoryTest() {
+class RelaxedFactoryWarningsTest {
 
     @Test
     fun testOptimisticFactoryCreationForSingleton_shouldFailTheBuild_whenThereIsNoDefaultConstructor() {
