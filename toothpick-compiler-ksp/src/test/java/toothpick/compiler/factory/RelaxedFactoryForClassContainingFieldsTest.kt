@@ -19,7 +19,6 @@ package toothpick.compiler.factory
 import com.google.common.truth.Truth
 import com.google.testing.compile.JavaFileObjects
 import com.google.testing.compile.JavaSourceSubjectFactory
-import com.tschuchort.compiletesting.SourceFile
 import org.junit.Test
 import toothpick.compiler.*
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryAndMemberInjectorProcessors
@@ -28,9 +27,8 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
 
     @Test
     fun testRelaxedFactoryCreationForInjectedField() {
-        val source = SourceFile.java(
-            "TestRelaxedFactoryCreationForInjectField.java",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectField",
             """
             package test;
             import javax.inject.Inject;
@@ -41,9 +39,8 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
             """
         )
 
-        val expectedSource = RawSource(
-            "TestRelaxedFactoryCreationForInjectField__Factory.java",
-            // language=java
+        val expectedSource = rawJavaSource(
+            "TestRelaxedFactoryCreationForInjectField__Factory",
             """
             package test;
             
@@ -94,7 +91,7 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
               }
             }
             
-            """.trimIndent()
+            """
         )
 
         compilationAssert()

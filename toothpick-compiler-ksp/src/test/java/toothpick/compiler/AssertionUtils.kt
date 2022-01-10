@@ -5,11 +5,6 @@ import com.tschuchort.compiletesting.SourceFile
 import org.junit.Assert.assertEquals
 import javax.annotation.processing.Processor
 
-data class RawSource(
-    val fileName: String,
-    val contents: String
-)
-
 data class Builder(
     val sources: List<SourceFile> = emptyList(),
     val annotationProcessors: List<Processor> = emptyList()
