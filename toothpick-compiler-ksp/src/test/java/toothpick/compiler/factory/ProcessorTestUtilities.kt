@@ -22,10 +22,10 @@ import javax.annotation.processing.Processor
 internal object ProcessorTestUtilities {
 
     @JvmStatic
-    fun factoryProcessors(): Iterable<Processor> = listOf(FactoryProcessor())
+    fun factoryProcessors(): List<Processor> = listOf(FactoryProcessor())
 
     @JvmStatic
-    fun factoryProcessorsFailingOnNonInjectableClasses(): Iterable<Processor> =
+    fun factoryProcessorsFailingOnNonInjectableClasses(): List<Processor> =
         listOf(
             FactoryProcessor().apply {
                 setCrashWhenNoFactoryCanBeCreated(true)
@@ -33,11 +33,11 @@ internal object ProcessorTestUtilities {
         )
 
     @JvmStatic
-    fun factoryAndMemberInjectorProcessors(): Iterable<Processor> =
+    fun factoryAndMemberInjectorProcessors(): List<Processor> =
         listOf(MemberInjectorProcessor(), FactoryProcessor())
 
     @JvmStatic
-    fun factoryProcessorsWithAdditionalTypes(vararg types: String): Iterable<Processor> =
+    fun factoryProcessorsWithAdditionalTypes(vararg types: String): List<Processor> =
         listOf(
             FactoryProcessor().apply {
                 for (type in types) {

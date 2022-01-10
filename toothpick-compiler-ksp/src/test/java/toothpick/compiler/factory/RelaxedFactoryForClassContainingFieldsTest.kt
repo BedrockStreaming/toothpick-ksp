@@ -19,15 +19,17 @@ package toothpick.compiler.factory
 import com.google.common.truth.Truth
 import com.google.testing.compile.JavaFileObjects
 import com.google.testing.compile.JavaSourceSubjectFactory
+import com.tschuchort.compiletesting.SourceFile
 import org.junit.Test
+import toothpick.compiler.*
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryAndMemberInjectorProcessors
 
 class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
 
     @Test
     fun testRelaxedFactoryCreationForInjectedField() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectField",
+        val source = SourceFile.java(
+            "TestRelaxedFactoryCreationForInjectField.java",
             // language=java
             """
             package test;
@@ -36,13 +38,15 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
               @Inject Foo foo;
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestRelaxedFactoryCreationForInjectField__Factory",
+
+        val expectedSource = RawSource(
+            "TestRelaxedFactoryCreationForInjectField__Factory.java",
             // language=java
             """
             package test;
+            
             import java.lang.Override;
             import toothpick.Factory;
             import toothpick.MemberInjector;
@@ -50,6 +54,7 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
             
             public final class TestRelaxedFactoryCreationForInjectField__Factory implements Factory<TestRelaxedFactoryCreationForInjectField> {
               private MemberInjector<TestRelaxedFactoryCreationForInjectField> memberInjector = new test.TestRelaxedFactoryCreationForInjectField__MemberInjector();
+            
               @Override
               public TestRelaxedFactoryCreationForInjectField createInstance(Scope scope) {
                 scope = getTargetScope(scope);
@@ -57,40 +62,46 @@ class RelaxedFactoryForClassContainingFieldsTest : BaseFactoryTest() {
                 memberInjector.inject(testRelaxedFactoryCreationForInjectField, scope);
                 return testRelaxedFactoryCreationForInjectField;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
+            
             """.trimIndent()
         )
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .compilesWithoutError()
-            .and()
-            .generatesSources(expectedSource)
+            .assertGeneratesSource(expectedSource)
     }
 
     @Test
