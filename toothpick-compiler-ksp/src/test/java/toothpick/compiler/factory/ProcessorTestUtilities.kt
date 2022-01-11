@@ -37,7 +37,7 @@ internal object ProcessorTestUtilities {
     fun factoryProcessorsWithAdditionalTypes(vararg types: String): List<Processor> =
         listOf(
             FactoryProcessor().apply {
-                addSupportedAnnotationTypes(*types)
+                setSupportedAnnotationTypes(*types)
             }
         )
 }

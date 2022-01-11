@@ -16,6 +16,7 @@
  */
 package toothpick.compiler.common
 
+import org.jetbrains.annotations.TestOnly
 import toothpick.compiler.common.generators.CodeGenerator
 import toothpick.compiler.common.generators.targets.ParamInjectionTarget
 import toothpick.compiler.memberinjector.targets.FieldInjectionTarget
@@ -42,23 +43,19 @@ abstract class ToothpickProcessor : AbstractProcessor() {
     protected lateinit var typeUtils: Types
     private lateinit var filer: Filer
 
-    private var toothpickExcludeFilters: String = "java.*,android.*"
-    protected var toothpickCrashWhenMethodIsNotPackageVisible: Boolean? = null
-    protected var _supportedAnnotationTypes: MutableSet<String> = HashSet()
+    protected var optionsOverride: ToothpickProcessorOptions? = null
+    protected lateinit var options: ToothpickProcessorOptions
 
     @Synchronized
     override fun init(processingEnv: ProcessingEnvironment) {
         super.init(processingEnv)
+        options = optionsOverride ?: processingEnv.readOptions()
         elementUtils = processingEnv.elementUtils
         typeUtils = processingEnv.typeUtils
         filer = processingEnv.filer
     }
 
     override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.latestSupported()
-
-    fun addSupportedAnnotationTypes(vararg typeFQNs: String) {
-        _supportedAnnotationTypes.addAll(typeFQNs)
-    }
 
     protected fun writeToFile(
         codeGenerator: CodeGenerator,
@@ -85,29 +82,6 @@ abstract class ToothpickProcessor : AbstractProcessor() {
         return success
     }
 
-    /**
-     * Reads both annotation compilers [ToothpickProcessor.PARAMETER_EXCLUDES] option from the
-     * arguments passed to the processor.
-     */
-    protected fun readCommonProcessorOptions() {
-        readOptionExcludes()
-    }
-
-    private fun readOptionExcludes() {
-        processingEnv.options[PARAMETER_EXCLUDES]?.let { excludes ->
-            toothpickExcludeFilters = excludes
-        }
-    }
-
-    protected fun readOptionAnnotationTypes() {
-        processingEnv.options[PARAMETER_ANNOTATION_TYPES]
-            ?.split(",")
-            ?.toTypedArray()
-            ?.forEach { additionalAnnotationType ->
-                addSupportedAnnotationTypes(additionalAnnotationType.trim { it <= ' ' })
-            }
-    }
-
     protected fun error(message: String, vararg args: Any?) {
         processingEnv.messager.printMessage(Diagnostic.Kind.ERROR, String.format(message, *args))
     }
@@ -125,7 +99,7 @@ abstract class ToothpickProcessor : AbstractProcessor() {
     }
 
     private fun crashOrWarnWhenMethodIsNotPackageVisible(element: Element, message: String) {
-        if (toothpickCrashWhenMethodIsNotPackageVisible == true) error(element, message)
+        if (options.crashWhenInjectedMethodIsNotPackageVisible) error(element, message)
         else warning(element, message)
     }
 
@@ -342,8 +316,8 @@ abstract class ToothpickProcessor : AbstractProcessor() {
 
     protected fun isExcludedByFilters(typeElement: TypeElement): Boolean {
         val typeElementName = typeElement.qualifiedName.toString()
-        for (exclude in toothpickExcludeFilters.split(",").toTypedArray()) {
-            val regEx = exclude.trim { it <= ' ' }.toRegex()
+        for (exclude in options.excludes.toTypedArray()) {
+            val regEx = exclude.toRegex()
             if (typeElementName.matches(regEx)) {
                 warning(
                     typeElement,
@@ -536,6 +510,14 @@ abstract class ToothpickProcessor : AbstractProcessor() {
         val elementTypeMirror = element.asType()
         val firstParameterTypeMirror = (elementTypeMirror as DeclaredType).typeArguments[0]
         return typeUtils.asElement(typeUtils.erasure(firstParameterTypeMirror)) as TypeElement
+    }
+
+    @TestOnly
+    internal fun setSupportedAnnotationTypes(vararg typeFQNs: String) {
+        val current = optionsOverride ?: ToothpickProcessorOptions()
+        optionsOverride = current.copy(
+            annotationTypes = current.annotationTypes + typeFQNs
+        )
     }
 
     companion object {

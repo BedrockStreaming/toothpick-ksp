@@ -16,11 +16,13 @@
  */
 package toothpick.compiler.factory
 
+import org.jetbrains.annotations.TestOnly
 import toothpick.InjectConstructor
 import toothpick.ProvidesReleasable
 import toothpick.ProvidesSingleton
 import toothpick.Releasable
 import toothpick.compiler.common.ToothpickProcessor
+import toothpick.compiler.common.ToothpickProcessorOptions
 import toothpick.compiler.factory.generators.FactoryGenerator
 import toothpick.compiler.factory.targets.ConstructorInjectionTarget
 import java.lang.annotation.Retention
@@ -72,25 +74,11 @@ import javax.lang.model.util.ElementFilter
 )
 class FactoryProcessor : ToothpickProcessor() {
 
-    private var crashWhenNoFactoryCanBeCreated: Boolean? = null
-    private val allRoundsGeneratedToTypeElement: MutableMap<String, TypeElement> = HashMap()
+    private val allRoundsGeneratedToTypeElement = mutableMapOf<String, TypeElement>()
 
-    override fun getSupportedAnnotationTypes(): Set<String> {
-        addSupportedAnnotationTypes(
-            INJECT_ANNOTATION_CLASS_NAME,
-            SINGLETON_ANNOTATION_CLASS_NAME,
-            PRODUCES_SINGLETON_ANNOTATION_CLASS_NAME,
-            INJECT_CONSTRUCTOR_ANNOTATION_CLASS_NAME
-        )
-
-        readOptionAnnotationTypes()
-        return _supportedAnnotationTypes
-    }
+    override fun getSupportedAnnotationTypes(): Set<String> = options.annotationTypes
 
     override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
-        readCommonProcessorOptions()
-        readCrashWhenNoFactoryCanBeCreatedOption()
-
         val mapTypeElementToConstructorInjectionTarget = findAndParseTargets(roundEnv, annotations)
 
         // Generate Factories
@@ -104,13 +92,6 @@ class FactoryProcessor : ToothpickProcessor() {
             allRoundsGeneratedToTypeElement[factoryGenerator.fqcn] = typeElement
         }
         return false
-    }
-
-    private fun readCrashWhenNoFactoryCanBeCreatedOption() {
-        val options = processingEnv.options
-        if (crashWhenNoFactoryCanBeCreated == null) {
-            crashWhenNoFactoryCanBeCreated = options[PARAMETER_CRASH_WHEN_NO_FACTORY_CAN_BE_CREATED].toBoolean()
-        }
     }
 
     private fun findAndParseTargets(
@@ -428,20 +409,18 @@ class FactoryProcessor : ToothpickProcessor() {
             }
         }
         if (!isInjectableWarningSuppressed(typeElement)) {
-            val message = String.format(
-                "The class %s has injected members or a scope annotation "
-                    + "but has no @Inject annotated (non-private) constructor "
-                    + " nor a non-private default constructor. "
-                    + cannotCreateAFactoryMessage,
-                typeElement.qualifiedName.toString()
-            )
+            val message =
+                "The class ${typeElement.qualifiedName} has injected members or a scope annotation but has no " +
+                    "@Inject annotated (non-private) constructor  nor a non-private default constructor. " +
+                    cannotCreateAFactoryMessage
+
             crashOrWarnWhenNoFactoryCanBeCreated(typeElement, message)
         }
         return null
     }
 
     private fun crashOrWarnWhenNoFactoryCanBeCreated(element: Element, message: String) {
-        if (crashWhenNoFactoryCanBeCreated == true) {
+        if (options.crashWhenNoFactoryCanBeCreated) {
             error(element, message)
         } else {
             warning(element, message)
@@ -558,13 +537,16 @@ class FactoryProcessor : ToothpickProcessor() {
         return !isAbstract && !isPrivate
     }
 
-    // used for testing only
-    fun setCrashWhenNoFactoryCanBeCreated(crashWhenNoFactoryCanBeCreated: Boolean) {
-        this.crashWhenNoFactoryCanBeCreated = crashWhenNoFactoryCanBeCreated
+    @TestOnly
+    internal fun setCrashWhenNoFactoryCanBeCreated(crashWhenNoFactoryCanBeCreated: Boolean) {
+        val current = optionsOverride ?: ToothpickProcessorOptions()
+        optionsOverride = current.copy(
+            crashWhenNoFactoryCanBeCreated = crashWhenNoFactoryCanBeCreated
+        )
     }
 
-    // used for testing only
-    fun getOriginatingElement(generatedQualifiedName: String): TypeElement? {
+    @TestOnly
+    internal fun getOriginatingElement(generatedQualifiedName: String): TypeElement? {
         return allRoundsGeneratedToTypeElement[generatedQualifiedName]
     }
 

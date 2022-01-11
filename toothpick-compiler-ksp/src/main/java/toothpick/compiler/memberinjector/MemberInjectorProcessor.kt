@@ -16,7 +16,9 @@
  */
 package toothpick.compiler.memberinjector
 
+import org.jetbrains.annotations.TestOnly
 import toothpick.compiler.common.ToothpickProcessor
+import toothpick.compiler.common.ToothpickProcessorOptions
 import toothpick.compiler.memberinjector.generators.MemberInjectorGenerator
 import toothpick.compiler.memberinjector.targets.FieldInjectionTarget
 import toothpick.compiler.memberinjector.targets.MethodInjectionTarget
@@ -46,22 +48,24 @@ import javax.lang.model.util.ElementFilter
     ToothpickProcessor.PARAMETER_EXCLUDES,
     ToothpickProcessor.PARAMETER_CRASH_WHEN_INJECTED_METHOD_IS_NOT_PACKAGE
 )
-class MemberInjectorProcessor : ToothpickProcessor() {
+open class MemberInjectorProcessor : ToothpickProcessor() {
 
-    private var mapTypeElementToFieldInjectorTargetList: MutableMap<TypeElement, MutableList<FieldInjectionTarget>> =
-        LinkedHashMap()
-    private var mapTypeElementToMethodInjectorTargetList: MutableMap<TypeElement, MutableList<MethodInjectionTarget>> =
-        LinkedHashMap()
-    private var mapTypeElementToSuperTypeElementThatNeedsInjection: MutableMap<TypeElement, TypeElement?> =
-        LinkedHashMap()
-    private val allRoundsGeneratedToTypeElement: MutableMap<String, TypeElement> = HashMap()
+    private var mapTypeElementToFieldInjectorTargetList =
+        mutableMapOf<TypeElement, MutableList<FieldInjectionTarget>>()
+
+    private var mapTypeElementToMethodInjectorTargetList =
+        mutableMapOf<TypeElement, MutableList<MethodInjectionTarget>>()
+
+    private var mapTypeElementToSuperTypeElementThatNeedsInjection =
+        mutableMapOf<TypeElement, TypeElement?>()
+
+    private val allRoundsGeneratedToTypeElement = mutableMapOf<String, TypeElement>()
 
     override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
-        readCommonProcessorOptions()
-        readOptionCrashWhenMethodIsNotPackageProtected()
-        mapTypeElementToFieldInjectorTargetList = LinkedHashMap()
-        mapTypeElementToMethodInjectorTargetList = LinkedHashMap()
-        mapTypeElementToSuperTypeElementThatNeedsInjection = LinkedHashMap()
+        mapTypeElementToFieldInjectorTargetList = mutableMapOf()
+        mapTypeElementToMethodInjectorTargetList = mutableMapOf()
+        mapTypeElementToSuperTypeElementThatNeedsInjection = mutableMapOf()
+
         findAndParseTargets(roundEnv)
 
         // Generate member scopes
@@ -82,22 +86,16 @@ class MemberInjectorProcessor : ToothpickProcessor() {
                 methodInjectionTargetList,
                 typeUtils
             )
+
             writeToFile(
                 codeGenerator = memberInjectorGenerator,
                 fileDescription = "MemberInjector for type %s".format(typeElement),
                 originatingElement = typeElement
             )
+
             allRoundsGeneratedToTypeElement[memberInjectorGenerator.fqcn] = typeElement
         }
         return false
-    }
-
-    private fun readOptionCrashWhenMethodIsNotPackageProtected() {
-        val options = processingEnv.options
-        if (toothpickCrashWhenMethodIsNotPackageVisible == null) {
-            toothpickCrashWhenMethodIsNotPackageVisible =
-                options[PARAMETER_CRASH_WHEN_INJECTED_METHOD_IS_NOT_PACKAGE].toBoolean()
-        }
     }
 
     private fun findAndParseTargets(roundEnv: RoundEnvironment) {
@@ -105,7 +103,7 @@ class MemberInjectorProcessor : ToothpickProcessor() {
         processInjectAnnotatedMethods(roundEnv)
     }
 
-    protected fun processInjectAnnotatedFields(roundEnv: RoundEnvironment) {
+    private fun processInjectAnnotatedFields(roundEnv: RoundEnvironment) {
         for (element in ElementFilter.fieldsIn(roundEnv.getElementsAnnotatedWith(Inject::class.java))) {
             if (!isExcludedByFilters(element.enclosingElement as TypeElement)) {
                 processInjectAnnotatedField(element, mapTypeElementToFieldInjectorTargetList)
@@ -113,7 +111,7 @@ class MemberInjectorProcessor : ToothpickProcessor() {
         }
     }
 
-    protected fun processInjectAnnotatedMethods(roundEnv: RoundEnvironment) {
+    private fun processInjectAnnotatedMethods(roundEnv: RoundEnvironment) {
         for (element in ElementFilter.methodsIn(roundEnv.getElementsAnnotatedWith(Inject::class.java))) {
             if (!isExcludedByFilters(element.enclosingElement as TypeElement)) {
                 processInjectAnnotatedMethod(element, mapTypeElementToMethodInjectorTargetList)
@@ -174,15 +172,18 @@ class MemberInjectorProcessor : ToothpickProcessor() {
         return methodInjectionTarget
     }
 
-    // used for testing only
-    fun setCrashOrWarnWhenMethodIsNotPackageVisible(
+    @TestOnly
+    internal fun setCrashOrWarnWhenMethodIsNotPackageVisible(
         crashOrWarnWhenMethodIsNotPackageVisible: Boolean
     ) {
-        toothpickCrashWhenMethodIsNotPackageVisible = crashOrWarnWhenMethodIsNotPackageVisible
+        val current = optionsOverride ?: ToothpickProcessorOptions()
+        optionsOverride = current.copy(
+            crashWhenInjectedMethodIsNotPackageVisible = crashOrWarnWhenMethodIsNotPackageVisible
+        )
     }
 
-    // used for testing only
-    fun getOriginatingElement(generatedQualifiedName: String): TypeElement? {
+    @TestOnly
+    internal fun getOriginatingElement(generatedQualifiedName: String): TypeElement? {
         return allRoundsGeneratedToTypeElement[generatedQualifiedName]
     }
 }
