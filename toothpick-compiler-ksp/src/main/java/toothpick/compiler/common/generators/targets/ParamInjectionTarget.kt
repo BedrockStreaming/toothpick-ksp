@@ -19,7 +19,7 @@ package toothpick.compiler.common.generators.targets
 import javax.lang.model.element.TypeElement
 
 open class ParamInjectionTarget(
-    var memberClass: TypeElement,
+    val memberClass: TypeElement,
     val memberName: String,
     val kind: Kind?,
     val kindParamClass: TypeElement,

@@ -56,8 +56,8 @@ abstract class ToothpickProcessor : AbstractProcessor() {
 
     override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.latestSupported()
 
-    fun addSupportedAnnotationType(typeFQN: String) {
-        _supportedAnnotationTypes.add(typeFQN)
+    fun addSupportedAnnotationTypes(vararg typeFQNs: String) {
+        _supportedAnnotationTypes.addAll(typeFQNs)
     }
 
     protected fun writeToFile(
@@ -75,13 +75,11 @@ abstract class ToothpickProcessor : AbstractProcessor() {
             error("Error writing %s file: %s", fileDescription, e.message)
             success = false
         } finally {
-            if (writer != null) {
-                try {
-                    writer.close()
-                } catch (e: IOException) {
-                    error("Error closing %s file: %s", fileDescription, e.message)
-                    success = false
-                }
+            try {
+                writer?.close()
+            } catch (e: IOException) {
+                error("Error closing %s file: %s", fileDescription, e.message)
+                success = false
             }
         }
         return success
@@ -106,7 +104,7 @@ abstract class ToothpickProcessor : AbstractProcessor() {
             ?.split(",")
             ?.toTypedArray()
             ?.forEach { additionalAnnotationType ->
-                addSupportedAnnotationType(additionalAnnotationType.trim { it <= ' ' })
+                addSupportedAnnotationTypes(additionalAnnotationType.trim { it <= ' ' })
             }
     }
 
@@ -208,7 +206,8 @@ abstract class ToothpickProcessor : AbstractProcessor() {
     }
 
     private fun isValidInjectedElementKind(injectedTypeElement: VariableElement): Boolean {
-        val typeElement = typeUtils.asElement(injectedTypeElement.asType())
+        val typeElement: Element? = typeUtils.asElement(injectedTypeElement.asType())
+
         // typeElement can be null for primitives.
         // https://github.com/stephanenicolas/toothpick/issues/261
         if (typeElement == null
@@ -220,25 +219,29 @@ abstract class ToothpickProcessor : AbstractProcessor() {
             // the element can be a field or a parameter
             var enclosingElement = injectedTypeElement.enclosingElement
             val typeName = typeElement?.toString() ?: injectedTypeElement.asType().toString()
-            if (enclosingElement is TypeElement) {
-                error(
-                    injectedTypeElement,
-                    "Field %s#%s is of type %s which is not supported by Toothpick.",
-                    enclosingElement.qualifiedName,
-                    injectedTypeElement.simpleName,
-                    typeName
-                )
-            } else {
-                val methodOrConstructorElement = enclosingElement
-                enclosingElement = enclosingElement.enclosingElement
-                error(
-                    injectedTypeElement,
-                    "Parameter %s in method/constructor %s#%s is of type %s which is not supported by Toothpick.",
-                    injectedTypeElement.simpleName,
-                    (enclosingElement as TypeElement).qualifiedName,
-                    methodOrConstructorElement.simpleName,
-                    typeName
-                )
+
+            when (enclosingElement) {
+                is TypeElement -> {
+                    error(
+                        injectedTypeElement,
+                        "Field %s#%s is of type %s which is not supported by Toothpick.",
+                        enclosingElement.qualifiedName,
+                        injectedTypeElement.simpleName,
+                        typeName
+                    )
+                }
+                else -> {
+                    val methodOrConstructorElement = enclosingElement
+                    enclosingElement = enclosingElement.enclosingElement
+                    error(
+                        injectedTypeElement,
+                        "Parameter %s in method/constructor %s#%s is of type %s which is not supported by Toothpick.",
+                        injectedTypeElement.simpleName,
+                        (enclosingElement as TypeElement).qualifiedName,
+                        methodOrConstructorElement.simpleName,
+                        typeName
+                    )
+                }
             }
             return false
         }

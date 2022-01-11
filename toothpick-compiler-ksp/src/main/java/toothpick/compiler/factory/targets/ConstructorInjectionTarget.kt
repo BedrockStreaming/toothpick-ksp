@@ -22,17 +22,14 @@ import javax.lang.model.element.TypeElement
 /** Basically all information to create an object / call a constructor of a class.  */
 class ConstructorInjectionTarget(
     val builtClass: TypeElement,
-    var scopeName: String?,
-    var hasSingletonAnnotation: Boolean,
-    var hasReleasableAnnotation: Boolean,
+    val scopeName: String?,
+    val hasSingletonAnnotation: Boolean,
+    val hasReleasableAnnotation: Boolean,
     val hasProvidesSingletonInScopeAnnotation: Boolean,
     val hasProvidesReleasableAnnotation: Boolean,
     /** true if the class as @Injected members  */
     val superClassThatNeedsMemberInjection: TypeElement?
 ) {
-    @JvmField
     val parameters: MutableList<ParamInjectionTarget> = ArrayList()
-
-    @JvmField
     var throwsThrowable = false
 }

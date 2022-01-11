@@ -20,7 +20,8 @@ import javax.annotation.processing.Processor
 
 internal object ProcessorTestUtilities {
 
-    fun memberInjectorProcessors(): List<Processor> = listOf(MemberInjectorProcessor())
+    fun memberInjectorProcessors(): List<Processor> =
+        listOf(MemberInjectorProcessor())
 
     fun memberInjectorProcessorsFailingWhenMethodIsNotPackageVisible(): List<Processor> =
         listOf(

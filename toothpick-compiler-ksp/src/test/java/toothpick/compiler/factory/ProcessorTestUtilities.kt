@@ -21,7 +21,8 @@ import javax.annotation.processing.Processor
 
 internal object ProcessorTestUtilities {
 
-    fun factoryProcessors(): List<Processor> = listOf(FactoryProcessor())
+    fun factoryProcessors(): List<Processor> =
+        listOf(FactoryProcessor())
 
     fun factoryProcessorsFailingOnNonInjectableClasses(): List<Processor> =
         listOf(
@@ -36,9 +37,7 @@ internal object ProcessorTestUtilities {
     fun factoryProcessorsWithAdditionalTypes(vararg types: String): List<Processor> =
         listOf(
             FactoryProcessor().apply {
-                for (type in types) {
-                    addSupportedAnnotationType(type)
-                }
+                addSupportedAnnotationTypes(*types)
             }
         )
 }

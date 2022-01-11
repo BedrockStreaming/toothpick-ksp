@@ -76,10 +76,13 @@ class FactoryProcessor : ToothpickProcessor() {
     private val allRoundsGeneratedToTypeElement: MutableMap<String, TypeElement> = HashMap()
 
     override fun getSupportedAnnotationTypes(): Set<String> {
-        addSupportedAnnotationType(INJECT_ANNOTATION_CLASS_NAME)
-        addSupportedAnnotationType(SINGLETON_ANNOTATION_CLASS_NAME)
-        addSupportedAnnotationType(PRODUCES_SINGLETON_ANNOTATION_CLASS_NAME)
-        addSupportedAnnotationType(INJECT_CONSTRUCTOR_ANNOTATION_CLASS_NAME)
+        addSupportedAnnotationTypes(
+            INJECT_ANNOTATION_CLASS_NAME,
+            SINGLETON_ANNOTATION_CLASS_NAME,
+            PRODUCES_SINGLETON_ANNOTATION_CLASS_NAME,
+            INJECT_CONSTRUCTOR_ANNOTATION_CLASS_NAME
+        )
+
         readOptionAnnotationTypes()
         return _supportedAnnotationTypes
     }
@@ -458,7 +461,8 @@ class FactoryProcessor : ToothpickProcessor() {
         var hasScopeAnnotation = false
         for (annotationMirror in typeElement.annotationMirrors) {
             val annotationTypeElement = annotationMirror.annotationType.asElement() as TypeElement
-            val isSingletonAnnotation = annotationTypeElement.qualifiedName.contentEquals("javax.inject.Singleton")
+            val isSingletonAnnotation =
+                annotationTypeElement.qualifiedName.contentEquals(SINGLETON_ANNOTATION_CLASS_NAME)
             if (!isSingletonAnnotation && annotationTypeElement.getAnnotation(Scope::class.java) != null) {
                 checkScopeAnnotationValidity(annotationTypeElement)
                 if (scopeName != null) {
@@ -471,7 +475,7 @@ class FactoryProcessor : ToothpickProcessor() {
             }
         }
         if (hasScopeAnnotation && scopeName == null) {
-            scopeName = "javax.inject.Singleton"
+            scopeName = SINGLETON_ANNOTATION_CLASS_NAME
         }
         return scopeName
     }
