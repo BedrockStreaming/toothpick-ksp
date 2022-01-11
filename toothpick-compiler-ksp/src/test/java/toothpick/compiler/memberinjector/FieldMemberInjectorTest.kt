@@ -16,19 +16,16 @@
  */
 package toothpick.compiler.memberinjector
 
-import com.google.common.truth.Truth
-import com.google.testing.compile.JavaFileObjects
-import com.google.testing.compile.JavaSourceSubjectFactory
 import org.junit.Test
+import toothpick.compiler.*
 import toothpick.compiler.memberinjector.ProcessorTestUtilities.memberInjectorProcessors
 
 class FieldMemberInjectorTest {
 
     @Test
     fun testSimpleFieldInjection() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -37,12 +34,11 @@ class FieldMemberInjectorTest {
               public TestFieldInjection() {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestFieldInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestFieldInjection__MemberInjector",
             """
             package test;
             
@@ -56,23 +52,20 @@ class FieldMemberInjectorTest {
                 target.foo = scope.getInstance(Foo.class);
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testNamedFieldInjection_whenUsingNamed() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -82,12 +75,11 @@ class FieldMemberInjectorTest {
               public TestFieldInjection() {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestFieldInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestFieldInjection__MemberInjector",
             """
             package test;
             
@@ -101,23 +93,20 @@ class FieldMemberInjectorTest {
                 target.foo = scope.getInstance(Foo.class, "bar");
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testNamedFieldInjection_whenUsingQualifierAnnotation() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -130,12 +119,11 @@ class FieldMemberInjectorTest {
             class Foo {}
             @Qualifier
             @interface Bar {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestFieldInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestFieldInjection__MemberInjector",
             """
             package test;
             
@@ -149,23 +137,20 @@ class FieldMemberInjectorTest {
                 target.foo = scope.getInstance(Foo.class, "test.Bar");
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testNamedFieldInjection_whenUsingNonQualifierAnnotation() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -176,12 +161,11 @@ class FieldMemberInjectorTest {
             }
             class Foo {}
             @interface Bar {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestFieldInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestFieldInjection__MemberInjector",
             """
             package test;
             
@@ -195,23 +179,20 @@ class FieldMemberInjectorTest {
                 target.foo = scope.getInstance(Foo.class);
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testNamedProviderFieldInjection_whenUsingQualifierAnnotation() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -225,12 +206,11 @@ class FieldMemberInjectorTest {
             class Foo {}
             @Qualifier
             @interface Bar {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestFieldInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestFieldInjection__MemberInjector",
             """
             package test;
             
@@ -244,23 +224,20 @@ class FieldMemberInjectorTest {
                 target.foo = scope.getProvider(Foo.class, "test.Bar");
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testNamedProviderFieldInjection_whenUsingNonQualifierAnnotation() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -272,12 +249,11 @@ class FieldMemberInjectorTest {
             }
             class Foo {}
             @interface Bar {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestFieldInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestFieldInjection__MemberInjector",
             """
             package test;
             
@@ -291,23 +267,20 @@ class FieldMemberInjectorTest {
                 target.foo = scope.getProvider(Foo.class);
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testNamedFieldInjection_shouldWork_whenUsingMoreThan2Annotation_butOnly1Qualifier() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -321,12 +294,11 @@ class FieldMemberInjectorTest {
             @Qualifier
             @interface Bar {}
             @interface Qurtz {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestFieldInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestFieldInjection__MemberInjector",
             """
             package test;
             
@@ -340,23 +312,20 @@ class FieldMemberInjectorTest {
                 target.foo = scope.getInstance(Foo.class, "test.Bar");
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testNamedFieldInjection_shouldFail_whenUsingMoreThan1QualifierAnnotations() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -371,11 +340,10 @@ class FieldMemberInjectorTest {
             @interface Bar {}
             @Qualifier
             @interface Qurtz {}
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .failsToCompile()
@@ -386,9 +354,8 @@ class FieldMemberInjectorTest {
 
     @Test
     fun testProviderFieldInjection() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -398,12 +365,11 @@ class FieldMemberInjectorTest {
               public TestFieldInjection() {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestFieldInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestFieldInjection__MemberInjector",
             """
             package test;
             
@@ -417,23 +383,20 @@ class FieldMemberInjectorTest {
                 target.foo = scope.getProvider(Foo.class);
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testLazyFieldInjection() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -443,12 +406,11 @@ class FieldMemberInjectorTest {
               public TestFieldInjection() {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestFieldInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestFieldInjection__MemberInjector",
             """
             package test;
             
@@ -462,23 +424,20 @@ class FieldMemberInjectorTest {
                 target.foo = scope.getLazy(Foo.class);
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testLazyFieldInjectionOfGenericTypeButNotDeclaringLazyOfGenericType() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -488,12 +447,11 @@ class FieldMemberInjectorTest {
               public TestFieldInjection() {}
             }
             class Foo<T> {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestFieldInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestFieldInjection__MemberInjector",
             """
             package test;
             
@@ -507,23 +465,20 @@ class FieldMemberInjectorTest {
                 target.foo = scope.getLazy(Foo.class);
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testFieldInjection_shouldProduceMemberInjector_whenClassHas2Fields() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -533,12 +488,11 @@ class FieldMemberInjectorTest {
               public TestFieldInjection() {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestFieldInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestFieldInjection__MemberInjector",
             """
             package test;
             
@@ -553,23 +507,20 @@ class FieldMemberInjectorTest {
                 target.foo2 = scope.getInstance(Foo.class);
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testFieldInjection_shouldFail_whenFieldIsPrivate() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -578,11 +529,10 @@ class FieldMemberInjectorTest {
               public TestFieldInjection() {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .failsToCompile()
@@ -593,9 +543,8 @@ class FieldMemberInjectorTest {
 
     @Test
     fun testFieldInjection_shouldFail_WhenContainingClassIsPrivate() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -606,11 +555,10 @@ class FieldMemberInjectorTest {
               }
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .failsToCompile()
@@ -621,9 +569,8 @@ class FieldMemberInjectorTest {
 
     @Test
     fun testFieldInjection_shouldFail_WhenFieldIsInvalidLazy() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -632,11 +579,10 @@ class FieldMemberInjectorTest {
               @Inject Lazy foo;
               public TestFieldInjection() {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .failsToCompile()
@@ -645,9 +591,8 @@ class FieldMemberInjectorTest {
 
     @Test
     fun testFieldInjection_shouldFail_WhenFieldIsInvalidProvider() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -656,11 +601,10 @@ class FieldMemberInjectorTest {
               @Inject Provider foo;
               public TestFieldInjection() {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .failsToCompile()
@@ -671,9 +615,8 @@ class FieldMemberInjectorTest {
 
     @Test
     fun testFieldInjection_shouldFail_WhenFieldIsInvalidLazyGenerics() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -683,11 +626,10 @@ class FieldMemberInjectorTest {
               public TestFieldInjection() {}
             }
             class Foo<T> {}
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .failsToCompile()
@@ -698,9 +640,8 @@ class FieldMemberInjectorTest {
 
     @Test
     fun testFieldInjection_shouldFail_WhenFieldIsInvalidProviderGenerics() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -710,11 +651,10 @@ class FieldMemberInjectorTest {
               public TestFieldInjection() {}
             }
             class Foo<T> {}
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .failsToCompile()
@@ -725,9 +665,8 @@ class FieldMemberInjectorTest {
 
     @Test
     fun testFieldInjection_shouldInjectAsAnInstanceOfSuperClass_whenSuperClassIsStaticHasInjectedMembers() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMemberInjection",
-            // language=java
+        val source = javaSource(
+            "TestMemberInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -742,12 +681,11 @@ class FieldMemberInjectorTest {
               }
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestMemberInjection\$InnerClass__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestMemberInjection\$InnerClass__MemberInjector",
             """
             package test;
             
@@ -757,29 +695,27 @@ class FieldMemberInjectorTest {
             
             public final class TestMemberInjection${'$'}InnerClass__MemberInjector implements MemberInjector<TestMemberInjection.InnerClass> {
               private MemberInjector<TestMemberInjection.InnerSuperClass> superMemberInjector = new test.TestMemberInjection${'$'}InnerSuperClass__MemberInjector();
+            
               @Override
               public void inject(TestMemberInjection.InnerClass target, Scope scope) {
                 superMemberInjector.inject(target, scope);
                 target.foo = scope.getInstance(Foo.class);
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testMemberInjection_shouldInjectAsAnInstanceOfSuperClass_whenSuperClassHasInjectedMembers() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMemberInjection",
-            // language=java
+        val source = javaSource(
+            "TestMemberInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -790,12 +726,11 @@ class FieldMemberInjectorTest {
               @Inject Foo foo;
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestMemberInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestMemberInjection__MemberInjector",
             """
             package test;
             
@@ -805,29 +740,27 @@ class FieldMemberInjectorTest {
             
             public final class TestMemberInjection__MemberInjector implements MemberInjector<TestMemberInjection> {
               private MemberInjector<TestMemberInjectionParent> superMemberInjector = new test.TestMemberInjectionParent__MemberInjector();
+            
               @Override
               public void inject(TestMemberInjection target, Scope scope) {
                 superMemberInjector.inject(target, scope);
                 target.foo = scope.getInstance(Foo.class);
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testMemberInjection_shouldInjectAsAnInstanceOfSuperClass_whenSuperClassHasInjectedMembersAndTypeArgument() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMemberInjection",
-            // language=java
+        val source = javaSource(
+            "TestMemberInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -838,12 +771,11 @@ class FieldMemberInjectorTest {
               @Inject Foo foo;
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestMemberInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestMemberInjection__MemberInjector",
             """
             package test;
             
@@ -853,29 +785,27 @@ class FieldMemberInjectorTest {
             
             public final class TestMemberInjection__MemberInjector implements MemberInjector<TestMemberInjection> {
               private MemberInjector<TestMemberInjectionParent> superMemberInjector = new test.TestMemberInjectionParent__MemberInjector();
+            
               @Override
               public void inject(TestMemberInjection target, Scope scope) {
                 superMemberInjector.inject(target, scope);
                 target.foo = scope.getInstance(Foo.class);
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testFieldInjection_shouldFail_WhenFieldIsPrimitive() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestFieldInjection",
-            // language=java
+        val source = javaSource(
+            "TestFieldInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -883,11 +813,10 @@ class FieldMemberInjectorTest {
               @Inject int foo;
               public TestFieldInjection() {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .failsToCompile()

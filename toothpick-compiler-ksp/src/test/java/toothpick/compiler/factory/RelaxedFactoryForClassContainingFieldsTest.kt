@@ -36,7 +36,7 @@ class RelaxedFactoryForClassContainingFieldsTest {
             """
         )
 
-        val expectedSource = rawJavaSource(
+        val expectedSource = expectedJavaSource(
             "TestRelaxedFactoryCreationForInjectField__Factory",
             """
             package test;
@@ -87,7 +87,6 @@ class RelaxedFactoryForClassContainingFieldsTest {
                 return false;
               }
             }
-            
             """
         )
 
@@ -95,7 +94,7 @@ class RelaxedFactoryForClassContainingFieldsTest {
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .compilesWithoutError()
-            .assertGeneratesSource(expectedSource)
+            .generatesSources(expectedSource)
     }
 
     @Test

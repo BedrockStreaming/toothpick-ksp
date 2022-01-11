@@ -16,10 +16,8 @@
  */
 package toothpick.compiler.factory
 
-import com.google.common.truth.Truth
-import com.google.testing.compile.JavaFileObjects
-import com.google.testing.compile.JavaSourceSubjectFactory
 import org.junit.Test
+import toothpick.compiler.*
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryAndMemberInjectorProcessors
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryProcessors
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryProcessorsWithAdditionalTypes
@@ -28,23 +26,22 @@ class FactoryTest {
 
     @Test
     fun testEmptyConstructor_shouldWork_whenConstructorIsPublic() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestEmptyConstructor",
             """
             package test;
             import javax.inject.Inject;
             public class TestEmptyConstructor {
               @Inject public TestEmptyConstructor() {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestEmptyConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestEmptyConstructor__Factory",
             """
             package test;
+            
             import java.lang.Override;
             import toothpick.Factory;
             import toothpick.Scope;
@@ -55,63 +52,65 @@ class FactoryTest {
                 TestEmptyConstructor testEmptyConstructor = new TestEmptyConstructor();
                 return testEmptyConstructor;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-                """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testEmptyConstructor_shouldWork_whenConstructorIsPackage() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestEmptyConstructor",
             """
             package test;
             import javax.inject.Inject;
             public class TestEmptyConstructor {
               @Inject TestEmptyConstructor() {}
             }
-            """.trimIndent()
+            """
         )
 
-
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestEmptyConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestEmptyConstructor__Factory",
             """
             package test;
+
             import java.lang.Override;
             import toothpick.Factory;
             import toothpick.Scope;
@@ -122,62 +121,65 @@ class FactoryTest {
                 TestEmptyConstructor testEmptyConstructor = new TestEmptyConstructor();
                 return testEmptyConstructor;
               }
+
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-                """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testEmptyConstructor_shouldWork_whenConstructorIsProtected() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestEmptyConstructor",
             """
             package test;
             import javax.inject.Inject;
             public class TestEmptyConstructor {
               @Inject protected TestEmptyConstructor() {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestEmptyConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestEmptyConstructor__Factory",
             """
             package test;
+            
             import java.lang.Override;
             import toothpick.Factory;
             import toothpick.Scope;
@@ -188,59 +190,61 @@ class FactoryTest {
                 TestEmptyConstructor testEmptyConstructor = new TestEmptyConstructor();
                 return testEmptyConstructor;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testPrivateConstructor() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestPrivateConstructor",
-            // language=java
+        val source = javaSource(
+            "TestPrivateConstructor",
             """
             package test;
             import javax.inject.Inject;
             public class TestPrivateConstructor {
               @Inject private TestPrivateConstructor() {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .failsToCompile()
@@ -251,9 +255,8 @@ class FactoryTest {
 
     @Test
     fun testInjectedConstructorInPrivateClass_shouldNotAllowInjectionInPrivateClasses() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestConstructorInPrivateClass",
-            // language=java
+        val source = javaSource(
+            "TestConstructorInPrivateClass",
             """
             package test;
             import javax.inject.Inject;
@@ -262,11 +265,10 @@ class FactoryTest {
                 @Inject public TestConstructorInPrivateClass() {}
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .failsToCompile()
@@ -277,9 +279,8 @@ class FactoryTest {
 
     @Test
     fun testInjectedConstructorInProtectedClass_shouldWork() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestConstructorInProtectedClass",
-            // language=java
+        val source = javaSource(
+            "TestConstructorInProtectedClass",
             """
             package test;
             import javax.inject.Inject;
@@ -288,14 +289,14 @@ class FactoryTest {
                 @Inject public TestConstructorInProtectedClass() {}
               }
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/Wrapper\$TestConstructorInProtectedClass__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "Wrapper\$TestConstructorInProtectedClass__Factory",
             """
             package test;
+            
             import java.lang.Override;
             import toothpick.Factory;
             import toothpick.Scope;
@@ -306,62 +307,65 @@ class FactoryTest {
                 Wrapper.TestConstructorInProtectedClass testConstructorInProtectedClass = new Wrapper.TestConstructorInProtectedClass();
                 return testConstructorInProtectedClass;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testInjectedConstructorInPackageClass_shouldWork() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestConstructorInPackageClass",
-            // language=java
+        val source = javaSource(
+            "TestConstructorInPackageClass",
             """
             package test;
             import javax.inject.Inject;
             class TestConstructorInPackageClass {
               @Inject public TestConstructorInPackageClass() {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestConstructorInPackageClass__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestConstructorInPackageClass__Factory",
             """
             package test;
+            
             import java.lang.Override;
             import toothpick.Factory;
             import toothpick.Scope;
@@ -372,48 +376,51 @@ class FactoryTest {
                 TestConstructorInPackageClass testConstructorInPackageClass = new TestConstructorInPackageClass();
                 return testConstructorInPackageClass;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun test2InjectedConstructors() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestPrivateConstructor",
-            // language=java
+        val source = javaSource(
+            "TestPrivateConstructor",
             """
             package test;
             import javax.inject.Inject;
@@ -421,11 +428,10 @@ class FactoryTest {
               @Inject private TestPrivateConstructor() {}
               @Inject private TestPrivateConstructor(String s) {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .failsToCompile()
@@ -436,9 +442,8 @@ class FactoryTest {
 
     @Test
     fun test2Constructors_butOnlyOneIsInjected() {
-        val source = JavaFileObjects.forSourceString(
-            "test.Test2Constructors",
-            // language=java
+        val source = javaSource(
+            "Test2Constructors",
             """
             package test;
             import javax.inject.Inject;
@@ -446,14 +451,14 @@ class FactoryTest {
               @Inject public Test2Constructors() {}
               public Test2Constructors(String s) {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/Test2Constructors__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "Test2Constructors__Factory",
             """
             package test;
+            
             import java.lang.Override;
             import toothpick.Factory;
             import toothpick.Scope;
@@ -464,48 +469,51 @@ class FactoryTest {
                 Test2Constructors test2Constructors = new Test2Constructors();
                 return test2Constructors;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testAClassThatNeedsInjection_shouldHaveAFactoryThatInjectsIt_whenItHasAnInjectedField() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestAClassThatNeedsInjection",
-            // language=java
+        val source = javaSource(
+            "TestAClassThatNeedsInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -513,14 +521,14 @@ class FactoryTest {
             @Inject String s;
               @Inject public TestAClassThatNeedsInjection() {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestAClassThatNeedsInjection__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestAClassThatNeedsInjection__Factory",
             """
             package test;
+            
             import java.lang.Override;
             import toothpick.Factory;
             import toothpick.MemberInjector;
@@ -528,6 +536,7 @@ class FactoryTest {
             
             public final class TestAClassThatNeedsInjection__Factory implements Factory<TestAClassThatNeedsInjection> {
               private MemberInjector<TestAClassThatNeedsInjection> memberInjector = new test.TestAClassThatNeedsInjection__MemberInjector();
+            
               @Override
               public TestAClassThatNeedsInjection createInstance(Scope scope) {
                 scope = getTargetScope(scope);
@@ -535,48 +544,51 @@ class FactoryTest {
                 memberInjector.inject(testAClassThatNeedsInjection, scope);
                 return testAClassThatNeedsInjection;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testAInnerClassThatNeedsInjection_shouldHaveAFactoryThatInjectsIt_whenItHasAnInjectedField() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestAInnerClassThatNeedsInjection",
-            // language=java
+        val source = javaSource(
+            "TestAInnerClassThatNeedsInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -586,14 +598,14 @@ class FactoryTest {
                 public InnerClass() {}
               }
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestAInnerClassThatNeedsInjection\$InnerClass__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestAInnerClassThatNeedsInjection\$InnerClass__Factory",
             """
             package test;
+            
             import java.lang.Override;
             import toothpick.Factory;
             import toothpick.MemberInjector;
@@ -601,6 +613,7 @@ class FactoryTest {
             
             public final class TestAInnerClassThatNeedsInjection${'$'}InnerClass__Factory implements Factory<TestAInnerClassThatNeedsInjection.InnerClass> {
               private MemberInjector<TestAInnerClassThatNeedsInjection.InnerClass> memberInjector = new test.TestAInnerClassThatNeedsInjection${'$'}InnerClass__MemberInjector();
+            
               @Override
               public TestAInnerClassThatNeedsInjection.InnerClass createInstance(Scope scope) {
                 scope = getTargetScope(scope);
@@ -608,48 +621,51 @@ class FactoryTest {
                 memberInjector.inject(innerClass, scope);
                 return innerClass;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testAClassThatInheritFromAnotherClassThatNeedsInjection_shouldHaveAFactoryThatInjectsIt_whenItHasAnAnnotatedConstructor_andShouldUseSuperMemberInjector() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestAClassThatNeedsInjection",
-            // language=java
+        val source = javaSource(
+            "TestAClassThatNeedsInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -660,14 +676,14 @@ class FactoryTest {
               @Inject String s;
               public SuperClassThatNeedsInjection() {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestAClassThatNeedsInjection__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestAClassThatNeedsInjection__Factory",
             """
             package test;
+            
             import java.lang.Override;
             import toothpick.Factory;
             import toothpick.MemberInjector;
@@ -675,6 +691,7 @@ class FactoryTest {
             
             public final class TestAClassThatNeedsInjection__Factory implements Factory<TestAClassThatNeedsInjection> {
               private MemberInjector<SuperClassThatNeedsInjection> memberInjector = new test.SuperClassThatNeedsInjection__MemberInjector();
+            
               @Override
               public TestAClassThatNeedsInjection createInstance(Scope scope) {
                 scope = getTargetScope(scope);
@@ -682,48 +699,51 @@ class FactoryTest {
                 memberInjector.inject(testAClassThatNeedsInjection, scope);
                 return testAClassThatNeedsInjection;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testAClassThatNeedsInjection_shouldHaveAFactoryThatInjectsIt_whenItHasAnInjectedMethod() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestAClassThatNeedsInjection",
-            // language=java
+        val source = javaSource(
+            "TestAClassThatNeedsInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -731,14 +751,14 @@ class FactoryTest {
               @Inject public TestAClassThatNeedsInjection() {}
               @Inject public void m(String s) {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestAClassThatNeedsInjection__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestAClassThatNeedsInjection__Factory",
             """
             package test;
+            
             import java.lang.Override;
             import toothpick.Factory;
             import toothpick.MemberInjector;
@@ -746,6 +766,7 @@ class FactoryTest {
             
             public final class TestAClassThatNeedsInjection__Factory implements Factory<TestAClassThatNeedsInjection> {
               private MemberInjector<TestAClassThatNeedsInjection> memberInjector = new test.TestAClassThatNeedsInjection__MemberInjector();
+            
               @Override
               public TestAClassThatNeedsInjection createInstance(Scope scope) {
                 scope = getTargetScope(scope);
@@ -753,62 +774,65 @@ class FactoryTest {
                 memberInjector.inject(testAClassThatNeedsInjection, scope);
                 return testAClassThatNeedsInjection;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testNonEmptyConstructor() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructor",
             """
             package test;
             import javax.inject.Inject;
             public class TestNonEmptyConstructor {
               @Inject public TestNonEmptyConstructor(String str, Integer n) {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestNonEmptyConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestNonEmptyConstructor__Factory",
             """
             package test;
+            
             import java.lang.Integer;
             import java.lang.Override;
             import java.lang.String;
@@ -824,48 +848,51 @@ class FactoryTest {
                 TestNonEmptyConstructor testNonEmptyConstructor = new TestNonEmptyConstructor(param1, param2);
                 return testNonEmptyConstructor;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testNonEmptyConstructorWithLazy() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructor",
             """
             package test;
             import javax.inject.Inject;
@@ -873,14 +900,14 @@ class FactoryTest {
             public class TestNonEmptyConstructor {
               @Inject public TestNonEmptyConstructor(Lazy<String> str, Integer n) {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestNonEmptyConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestNonEmptyConstructor__Factory",
             """
             package test;
+            
             import java.lang.Integer;
             import java.lang.Override;
             import java.lang.String;
@@ -897,48 +924,51 @@ class FactoryTest {
                 TestNonEmptyConstructor testNonEmptyConstructor = new TestNonEmptyConstructor(param1, param2);
                 return testNonEmptyConstructor;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testNonEmptyConstructorWithProvider() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructor",
             """
             package test;
             import javax.inject.Inject;
@@ -946,14 +976,14 @@ class FactoryTest {
             public class TestNonEmptyConstructor {
               @Inject public TestNonEmptyConstructor(Provider<String> str, Integer n) {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestNonEmptyConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestNonEmptyConstructor__Factory",
             """
             package test;
+            
             import java.lang.Integer;
             import java.lang.Override;
             import java.lang.String;
@@ -970,48 +1000,51 @@ class FactoryTest {
                 TestNonEmptyConstructor testNonEmptyConstructor = new TestNonEmptyConstructor(param1, param2);
                 return testNonEmptyConstructor;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testNonEmptyConstructor_shouldFail_whenContainsInvalidLazyParameter() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructor",
             """
             package test;
             import javax.inject.Inject;
@@ -1019,11 +1052,10 @@ class FactoryTest {
             public class TestNonEmptyConstructor {
               @Inject public TestNonEmptyConstructor(Lazy lazy, Integer n) {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .failsToCompile()
@@ -1034,9 +1066,8 @@ class FactoryTest {
 
     @Test
     fun testNonEmptyConstructor_shouldFail_whenContainsInvalidProviderParameter() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructor",
             """
             package test;
             import javax.inject.Inject;
@@ -1044,11 +1075,10 @@ class FactoryTest {
             public class TestNonEmptyConstructor {
               @Inject public TestNonEmptyConstructor(Provider provider, Integer n) {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .failsToCompile()
@@ -1059,9 +1089,8 @@ class FactoryTest {
 
     @Test
     fun testNonEmptyConstructorWithGenerics() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructor",
             """
             package test;
             import java.util.List;
@@ -1069,14 +1098,14 @@ class FactoryTest {
             public class TestNonEmptyConstructor {
               @Inject public TestNonEmptyConstructor(List<String> str) {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestNonEmptyConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestNonEmptyConstructor__Factory",
             """
             package test;
+            
             import java.lang.Override;
             import java.util.List;
             import toothpick.Factory;
@@ -1090,48 +1119,51 @@ class FactoryTest {
                 TestNonEmptyConstructor testNonEmptyConstructor = new TestNonEmptyConstructor(param1);
                 return testNonEmptyConstructor;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testNonEmptyConstructorWithLazyAndGenerics_shouldFail() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructor",
             """
             package test;
             import java.util.List;
@@ -1140,11 +1172,10 @@ class FactoryTest {
             public class TestNonEmptyConstructor {
               @Inject public TestNonEmptyConstructor(Lazy<List<String>> str) {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .failsToCompile()
@@ -1155,9 +1186,8 @@ class FactoryTest {
 
     @Test
     fun testNonEmptyConstructorWithProviderAndGenerics_shouldFail() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructor",
             """
             package test;
             import java.util.List;
@@ -1166,11 +1196,10 @@ class FactoryTest {
             public class TestNonEmptyConstructor {
               @Inject public TestNonEmptyConstructor(Provider<List<String>> str) {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .failsToCompile()
@@ -1181,20 +1210,18 @@ class FactoryTest {
 
     @Test
     fun testAbstractClassWithInjectedConstructor() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestInvalidClassConstructor",
-            // language=java
+        val source = javaSource(
+            "TestInvalidClassConstructor",
             """
             package test;
             import javax.inject.Inject;
             public abstract class TestInvalidClassConstructor {
               @Inject public TestInvalidClassConstructor() {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .failsToCompile()
@@ -1205,23 +1232,22 @@ class FactoryTest {
 
     @Test
     fun testClassWithInjectedConstructorThrowingException() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestClassConstructorThrowingException",
-            // language=java
+        val source = javaSource(
+            "TestClassConstructorThrowingException",
             """
             package test;
             import javax.inject.Inject;
             public class TestClassConstructorThrowingException {
               @Inject public TestClassConstructorThrowingException(String s) throws Exception {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestClassConstructorThrowingException__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestClassConstructorThrowingException__Factory",
             """
             package test;
+            
             import java.lang.Override;
             import java.lang.String;
             import toothpick.Factory;
@@ -1239,48 +1265,51 @@ class FactoryTest {
                   throw new java.lang.RuntimeException(ex);
                 }
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testAClassWithSingletonAnnotation_shouldHaveAFactoryThatSaysItIsASingleton() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructor",
             """
             package test;
             import javax.inject.Inject;
@@ -1289,14 +1318,14 @@ class FactoryTest {
             public final class TestNonEmptyConstructor {
               @Inject public TestNonEmptyConstructor(String str, Integer n) {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestEmptyNonConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestNonEmptyConstructor__Factory",
             """
             package test;
+            
             import java.lang.Integer;
             import java.lang.Override;
             import java.lang.String;
@@ -1312,48 +1341,51 @@ class FactoryTest {
                 TestNonEmptyConstructor testNonEmptyConstructor = new TestNonEmptyConstructor(param1, param2);
                 return testNonEmptyConstructor;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope.getRootScope();
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return true;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return true;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testAClassWithSingletonAnnotationAndNoConstructor_shouldHaveAFactoryThatSaysItIsASingleton() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestEmptyConstructor",
             """
             package test;
             import javax.inject.Inject;
@@ -1361,14 +1393,14 @@ class FactoryTest {
             @Singleton
             public final class TestEmptyConstructor {
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestEmptyConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestEmptyConstructor__Factory",
             """
             package test;
+            
             import java.lang.Override;
             import toothpick.Factory;
             import toothpick.Scope;
@@ -1379,48 +1411,51 @@ class FactoryTest {
                 TestEmptyConstructor testEmptyConstructor = new TestEmptyConstructor();
                 return testEmptyConstructor;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope.getRootScope();
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return true;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return true;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testAClassWithEmptyScopedAnnotation_shouldHaveAFactoryThatSaysItIsScopedInCurrentScope() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructor",
             """
             package test;
             import javax.inject.Inject;
@@ -1435,14 +1470,14 @@ class FactoryTest {
               @Inject public TestNonEmptyConstructor(String str, Integer n) {}
               public @interface FooScope {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestEmptyNonConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestNonEmptyConstructor__Factory",
             """
             package test;
+            
             import java.lang.Integer;
             import java.lang.Override;
             import java.lang.String;
@@ -1458,48 +1493,51 @@ class FactoryTest {
                 TestNonEmptyConstructor testNonEmptyConstructor = new TestNonEmptyConstructor(param1, param2);
                 return testNonEmptyConstructor;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope.getParentScope(test.CustomScope.class);
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return true;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testAClassWithEmptyScopedAnnotationAndNoConstructor_shouldHaveAFactoryThatSaysItIsScopedInCurrentScope() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestEmptyConstructor",
             """
             package test;
             import javax.inject.Inject;
@@ -1512,14 +1550,14 @@ class FactoryTest {
             @CustomScope
             public final class TestEmptyConstructor {
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestEmptyConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestEmptyConstructor__Factory",
             """
             package test;
+            
             import java.lang.Override;
             import toothpick.Factory;
             import toothpick.Scope;
@@ -1530,50 +1568,51 @@ class FactoryTest {
                 TestEmptyConstructor testEmptyConstructor = new TestEmptyConstructor();
                 return testEmptyConstructor;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope.getParentScope(test.CustomScope.class);
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return true;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
-            .processedWith(
-                factoryProcessorsWithAdditionalTypes("test.CustomScope")
-            )
+            .processedWith(factoryProcessorsWithAdditionalTypes("test.CustomScope"))
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testAClassWithScopedAnnotationAndSingleton_shouldHaveAFactoryThatSaysItIsScopedInCurrentScopeAndSingleton() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructor",
             """
             package test;
             import javax.inject.Inject;
@@ -1589,14 +1628,14 @@ class FactoryTest {
               @Inject public TestNonEmptyConstructor(String str, Integer n) {}
               public @interface FooScope {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestEmptyNonConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestNonEmptyConstructor__Factory",
             """
             package test;
+            
             import java.lang.Integer;
             import java.lang.Override;
             import java.lang.String;
@@ -1612,48 +1651,51 @@ class FactoryTest {
                 TestNonEmptyConstructor testNonEmptyConstructor = new TestNonEmptyConstructor(param1, param2);
                 return testNonEmptyConstructor;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope.getParentScope(test.CustomScope.class);
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return true;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return true;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testAClassWithProvidesSingletonAnnotation_shouldHaveAFactoryThatSaysItIsAProvidesSingleton() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructor",
             """
             package test;
             import javax.inject.Inject;
@@ -1663,14 +1705,14 @@ class FactoryTest {
             public class TestNonEmptyConstructor {
               @Inject public TestNonEmptyConstructor(String str, Integer n) {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestEmptyNonConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestNonEmptyConstructor__Factory",
             """
             package test;
+            
             import java.lang.Integer;
             import java.lang.Override;
             import java.lang.String;
@@ -1686,59 +1728,61 @@ class FactoryTest {
                 TestNonEmptyConstructor testNonEmptyConstructor = new TestNonEmptyConstructor(param1, param2);
                 return testNonEmptyConstructor;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope.getRootScope();
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return true;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return true;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return true;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testInjectedConstructor_withPrimitiveParam() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestPrimitiveConstructor",
-            // language=java
+        val source = javaSource(
+            "TestPrimitiveConstructor",
             """
             package test;
             import javax.inject.Inject;
             public class TestPrimitiveConstructor {
               @Inject TestPrimitiveConstructor(int n) {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessors())
             .failsToCompile()

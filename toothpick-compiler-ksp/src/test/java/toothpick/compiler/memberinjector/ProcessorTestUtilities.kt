@@ -21,10 +21,10 @@ import javax.annotation.processing.Processor
 internal object ProcessorTestUtilities {
 
     @JvmStatic
-    fun memberInjectorProcessors(): Iterable<Processor> = listOf(MemberInjectorProcessor())
+    fun memberInjectorProcessors(): List<Processor> = listOf(MemberInjectorProcessor())
 
     @JvmStatic
-    fun memberInjectorProcessorsFailingWhenMethodIsNotPackageVisible(): Iterable<Processor> =
+    fun memberInjectorProcessorsFailingWhenMethodIsNotPackageVisible(): List<Processor> =
         listOf(
             MemberInjectorProcessor().apply {
                 setCrashOrWarnWhenMethodIsNotPackageVisible(true)

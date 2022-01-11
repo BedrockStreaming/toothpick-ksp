@@ -16,20 +16,16 @@
  */
 package toothpick.compiler.factory
 
-import com.google.common.truth.Truth
-import com.google.testing.compile.JavaFileObjects
-import com.google.testing.compile.JavaSourceSubjectFactory
 import org.junit.Test
+import toothpick.compiler.*
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryAndMemberInjectorProcessors
-import javax.tools.StandardLocation
 
 class RelaxedFactoryForScopeInstancesTest {
 
     @Test
     fun testOptimisticFactoryCreationForHasScopeInstances_shouldFail_whenThereIsNoScopeAnnotation() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestOptimisticFactoryCreationForHasScopeInstances",
-            // language=java
+        val source = javaSource(
+            "TestOptimisticFactoryCreationForHasScopeInstances",
             """
             package test;
             import javax.inject.Inject;
@@ -37,11 +33,10 @@ class RelaxedFactoryForScopeInstancesTest {
             @ProvidesSingleton
             public class TestOptimisticFactoryCreationForHasScopeInstances {
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .failsToCompile()
@@ -53,9 +48,8 @@ class RelaxedFactoryForScopeInstancesTest {
 
     @Test
     fun testOptimisticFactoryCreationForHasScopeInstances_shouldWork_whenThereIsAScopeAnnotation() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestOptimisticFactoryCreationForHasScopeInstances",
-            // language=java
+        val source = javaSource(
+            "TestOptimisticFactoryCreationForHasScopeInstances",
             """
             package test;
             import javax.inject.Inject;
@@ -69,27 +63,22 @@ class RelaxedFactoryForScopeInstancesTest {
             @ProvidesSingleton @CustomScope
             public class TestOptimisticFactoryCreationForHasScopeInstances {
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesFileNamed(
-                StandardLocation.locationFor("CLASS_OUTPUT"),
-                "test",
                 "TestOptimisticFactoryCreationForHasScopeInstances__Factory.class"
             )
     }
 
     @Test
     fun testOptimisticFactoryCreationForHasScopeInstances_shouldFail_whenThereIsAScopeAnnotationWithWrongRetention() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestOptimisticFactoryCreationForHasScopeInstances",
-            // language=java
+        val source = javaSource(
+            "TestOptimisticFactoryCreationForHasScopeInstances",
             """
             package test;
             import javax.inject.Inject;
@@ -103,11 +92,10 @@ class RelaxedFactoryForScopeInstancesTest {
             @ProvidesSingleton @CustomScope
             public class TestOptimisticFactoryCreationForHasScopeInstances {
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .failsToCompile()

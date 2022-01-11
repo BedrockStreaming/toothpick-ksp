@@ -16,20 +16,16 @@
  */
 package toothpick.compiler.factory
 
-import com.google.common.truth.Truth
-import com.google.testing.compile.JavaFileObjects
-import com.google.testing.compile.JavaSourceSubjectFactory
 import org.junit.Test
+import toothpick.compiler.*
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryAndMemberInjectorProcessors
-import toothpick.compiler.javaSource
 
 class RelaxedFactoryForClassContainingMethodsTest {
 
     @Test
     fun testRelaxedFactoryCreationForInjectedMethod() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectMethod",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectMethod",
             """
             package test;
             import javax.inject.Inject;
@@ -37,13 +33,13 @@ class RelaxedFactoryForClassContainingMethodsTest {
               @Inject void m(Foo foo) {}
             }
             class Foo {}
-           """.trimIndent()
+           """
         )
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestRelaxedFactoryCreationForInjectMethod__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestRelaxedFactoryCreationForInjectMethod__Factory",
             """
             package test;
+            
             import java.lang.Override;
             import toothpick.Factory;
             import toothpick.MemberInjector;
@@ -51,6 +47,7 @@ class RelaxedFactoryForClassContainingMethodsTest {
             
             public final class TestRelaxedFactoryCreationForInjectMethod__Factory implements Factory<TestRelaxedFactoryCreationForInjectMethod> {
               private MemberInjector<TestRelaxedFactoryCreationForInjectMethod> memberInjector = new test.TestRelaxedFactoryCreationForInjectMethod__MemberInjector();
+            
               @Override
               public TestRelaxedFactoryCreationForInjectMethod createInstance(Scope scope) {
                 scope = getTargetScope(scope);
@@ -58,48 +55,51 @@ class RelaxedFactoryForClassContainingMethodsTest {
                 memberInjector.inject(testRelaxedFactoryCreationForInjectMethod, scope);
                 return testRelaxedFactoryCreationForInjectMethod;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testRelaxedFactoryCreationForInjectedMethod_shouldFail_WhenMethodIsPrivate() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectMethod",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectMethod",
             """
             package test;
             import javax.inject.Inject;
@@ -107,11 +107,10 @@ class RelaxedFactoryForClassContainingMethodsTest {
               @Inject private void m(Foo foo) {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .failsToCompile()
@@ -122,9 +121,8 @@ class RelaxedFactoryForClassContainingMethodsTest {
 
     @Test
     fun testRelaxedFactoryCreationForInjectedMethod_shouldFail_WhenContainingClassIsInvalid() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectMethod",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectMethod",
             """
             package test;
             import javax.inject.Inject;
@@ -134,11 +132,10 @@ class RelaxedFactoryForClassContainingMethodsTest {
               }
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .failsToCompile()
@@ -149,9 +146,8 @@ class RelaxedFactoryForClassContainingMethodsTest {
 
     @Test
     fun testRelaxedFactoryCreationForInjectedMethod_shouldFail_WhenMethodParameterIsInvalidLazy() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectMethod",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectMethod",
             """
             package test;
             import javax.inject.Inject;
@@ -160,11 +156,10 @@ class RelaxedFactoryForClassContainingMethodsTest {
               @Inject void m(Lazy foo) {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .failsToCompile()
@@ -175,9 +170,8 @@ class RelaxedFactoryForClassContainingMethodsTest {
 
     @Test
     fun testRelaxedFactoryCreationForInjectedMethod_shouldFail_WhenMethodParameterIsInvalidProvider() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestRelaxedFactoryCreationForInjectMethod",
-            // language=java
+        val source = javaSource(
+            "TestRelaxedFactoryCreationForInjectMethod",
             """
             package test;
             import javax.inject.Inject;
@@ -186,11 +180,10 @@ class RelaxedFactoryForClassContainingMethodsTest {
               @Inject void m(Provider foo) {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .failsToCompile()

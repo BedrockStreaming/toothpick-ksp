@@ -14,8 +14,8 @@ fun javaSource(name: String, @Language("java") contents: String): SourceFile =
 fun ktSource(name: String, @Language("kotlin") contents: String): SourceFile =
     SourceFile.java("$name.kt", contents, trimIndent = true)
 
-fun rawJavaSource(name: String, @Language("java") contents: String): RawSource =
+fun expectedJavaSource(name: String, @Language("java") contents: String): RawSource =
     RawSource("$name.java", contents.trimIndent())
 
-fun rawKtSource(name: String, @Language("kotlin") contents: String): RawSource =
+fun expectedKtSource(name: String, @Language("kotlin") contents: String): RawSource =
     RawSource("$name.kt", contents.trimIndent())

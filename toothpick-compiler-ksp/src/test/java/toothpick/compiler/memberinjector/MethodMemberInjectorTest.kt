@@ -16,19 +16,16 @@
  */
 package toothpick.compiler.memberinjector
 
-import com.google.common.truth.Truth
-import com.google.testing.compile.JavaFileObjects
-import com.google.testing.compile.JavaSourceSubjectFactory
 import org.junit.Test
+import toothpick.compiler.*
 import toothpick.compiler.memberinjector.ProcessorTestUtilities.memberInjectorProcessors
 
 class MethodMemberInjectorTest {
 
     @Test
     fun testSimpleMethodInjection() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMethodInjection",
-            // language=java
+        val source = javaSource(
+            "TestMethodInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -37,12 +34,11 @@ class MethodMemberInjectorTest {
               public void m(Foo foo) {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestMethodInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestMethodInjection__MemberInjector",
             """
             package test;
             
@@ -57,22 +53,19 @@ class MethodMemberInjectorTest {
                 target.m(param1);
               }
             }
-            """.trimIndent()
+            """
         )
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testSimpleMethodInjectionWithLazy() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMethodInjection",
-            // language=java
+        val source = javaSource(
+            "TestMethodInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -82,12 +75,11 @@ class MethodMemberInjectorTest {
               public void m(Lazy<Foo> foo) {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestMethodInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestMethodInjection__MemberInjector",
             """
             package test;
             
@@ -103,23 +95,20 @@ class MethodMemberInjectorTest {
                 target.m(param1);
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testSimpleMethodInjectionWithProvider() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMethodInjection",
-            // language=java
+        val source = javaSource(
+            "TestMethodInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -129,12 +118,11 @@ class MethodMemberInjectorTest {
               public void m(Provider<Foo> foo) {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestMethodInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestMethodInjection__MemberInjector",
             """
             package test;
             
@@ -150,23 +138,20 @@ class MethodMemberInjectorTest {
                 target.m(param1);
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testSimpleMethodInjectionWithLazyOfGenericTypeButNotLazyOfGenericType() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMethodInjection",
-            // language=java
+        val source = javaSource(
+            "TestMethodInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -176,12 +161,11 @@ class MethodMemberInjectorTest {
               public void m(Lazy<Foo> foo) {}
             }
             class Foo<T> {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestMethodInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestMethodInjection__MemberInjector",
             """
             package test;
             
@@ -197,23 +181,20 @@ class MethodMemberInjectorTest {
                 target.m(param1);
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testSimpleMethodInjectionWithLazyOfGenericType_shouldFail_WithLazyOfGenericType() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMethodInjection",
-            // language=java
+        val source = javaSource(
+            "TestMethodInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -223,11 +204,10 @@ class MethodMemberInjectorTest {
               public void m(Lazy<Foo<String>> foo) {}
             }
             class Foo<T> {}
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .failsToCompile()
@@ -238,9 +218,8 @@ class MethodMemberInjectorTest {
 
     @Test
     fun testMethodInjection_shouldFail_whenInjectedMethodIsPrivate() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMethodInjection",
-            // language=java
+        val source = javaSource(
+            "TestMethodInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -249,11 +228,10 @@ class MethodMemberInjectorTest {
               private void m(Foo foo) {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .failsToCompile()
@@ -264,9 +242,8 @@ class MethodMemberInjectorTest {
 
     @Test
     fun testMethodInjection_shouldFail_whenContainingClassIsPrivate() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMethodInjection",
-            // language=java
+        val source = javaSource(
+            "TestMethodInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -277,11 +254,10 @@ class MethodMemberInjectorTest {
               }
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .failsToCompile()
@@ -292,9 +268,8 @@ class MethodMemberInjectorTest {
 
     @Test
     fun testMethodInjection_shouldFail_whenInjectedMethodParameterIsInvalidLazy() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMethodInjection",
-            // language=java
+        val source = javaSource(
+            "TestMethodInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -304,11 +279,10 @@ class MethodMemberInjectorTest {
               public void m(Lazy foo) {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .failsToCompile()
@@ -319,9 +293,8 @@ class MethodMemberInjectorTest {
 
     @Test
     fun testMethodInjection_shouldFail_whenInjectedMethodParameterIsInvalidProvider() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMethodInjection",
-            // language=java
+        val source = javaSource(
+            "TestMethodInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -331,11 +304,10 @@ class MethodMemberInjectorTest {
               public void m(Provider foo) {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .failsToCompile()
@@ -346,9 +318,8 @@ class MethodMemberInjectorTest {
 
     @Test
     fun testOverrideMethodInjection() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMethodInjectionParent",
-            // language=java
+        val source = javaSource(
+            "TestMethodInjectionParent",
             """
             package test;
             import javax.inject.Inject;
@@ -361,12 +332,11 @@ class MethodMemberInjectorTest {
               }
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestMethodInjectionParent\$TestMethodInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestMethodInjectionParent\$TestMethodInjection__MemberInjector",
             """
             package test;
             
@@ -375,29 +345,27 @@ class MethodMemberInjectorTest {
             import toothpick.Scope;
 
             public final class TestMethodInjectionParent${'$'}TestMethodInjection__MemberInjector implements MemberInjector<TestMethodInjectionParent.TestMethodInjection> {
-              private MemberInjector<TestMethodInjectionParent> superMemberInjector = new test.TestMethodInjectionParent__MemberInjector();\n
+              private MemberInjector<TestMethodInjectionParent> superMemberInjector = new test.TestMethodInjectionParent__MemberInjector();
+            
               @Override
               public void inject(TestMethodInjectionParent.TestMethodInjection target, Scope scope) {
                 superMemberInjector.inject(target, scope);
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testMethodInjection_withException() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMethodInjection",
-            // language=java
+        val source = javaSource(
+            "TestMethodInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -406,12 +374,11 @@ class MethodMemberInjectorTest {
               public void m(Foo foo) throws Exception {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestMethodInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestMethodInjection__MemberInjector",
             """
             package test;
             
@@ -427,28 +394,25 @@ class MethodMemberInjectorTest {
                 Foo param1 = scope.getInstance(Foo.class);
                 try {
                   target.m(param1);
-                } catch(Exception e1) {
+                } catch (Exception e1) {
                   throw new RuntimeException(e1);
-                } 
+                }
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testMethodInjection_withExceptions() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMethodInjection",
-            // language=java
+        val source = javaSource(
+            "TestMethodInjection",
             """
             package test;
             import javax.inject.Inject;
@@ -457,12 +421,11 @@ class MethodMemberInjectorTest {
               public void m(Foo foo) throws Exception, Throwable {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestMethodInjection__MemberInjector",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestMethodInjection__MemberInjector",
             """
             package test;
             
@@ -479,22 +442,20 @@ class MethodMemberInjectorTest {
                 Foo param1 = scope.getInstance(Foo.class);
                 try {
                   target.m(param1);
-                } catch(Exception e1) {
+                } catch (Exception e1) {
                   throw new RuntimeException(e1);
-                } catch(Throwable e2) {
+                } catch (Throwable e2) {
                   throw new RuntimeException(e2);
-                } 
+                }
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 }

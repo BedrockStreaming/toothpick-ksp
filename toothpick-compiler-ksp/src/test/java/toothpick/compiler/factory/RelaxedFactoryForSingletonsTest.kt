@@ -16,21 +16,17 @@
  */
 package toothpick.compiler.factory
 
-import com.google.common.truth.Truth
-import com.google.testing.compile.JavaFileObjects
-import com.google.testing.compile.JavaSourceSubjectFactory
 import org.junit.Test
+import toothpick.compiler.*
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryAndMemberInjectorProcessors
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryProcessorsWithAdditionalTypes
-import javax.tools.StandardLocation
 
 class RelaxedFactoryForSingletonsTest {
 
     @Test
     fun testOptimisticFactoryCreationForSingleton() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestOptimisticFactoryCreationForSingleton",
-            // language=java
+        val source = javaSource(
+            "TestOptimisticFactoryCreationForSingleton",
             """
             package test;
             import javax.inject.Inject;
@@ -38,26 +34,21 @@ class RelaxedFactoryForSingletonsTest {
             @Singleton
             public class TestOptimisticFactoryCreationForSingleton {
             }
-            """.trimIndent()
+            """
         )
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesFileNamed(
-                StandardLocation.locationFor("CLASS_OUTPUT"),
-                "test",
                 "TestOptimisticFactoryCreationForSingleton__Factory.class"
             )
     }
 
     @Test
     fun testOptimisticFactoryCreationForScopeAnnotation() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestOptimisticFactoryCreationForScopeAnnotation",
-            // language=java
+        val source = javaSource(
+            "TestOptimisticFactoryCreationForScopeAnnotation",
             """
             package test;
             import javax.inject.Inject;
@@ -70,28 +61,21 @@ class RelaxedFactoryForSingletonsTest {
             @CustomScope
             public class TestOptimisticFactoryCreationForScopeAnnotation {
             }
-            """.trimIndent()
+            """
         )
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
-            .processedWith(
-                factoryProcessorsWithAdditionalTypes("test.CustomScope")
-            )
+            .processedWith(factoryProcessorsWithAdditionalTypes("test.CustomScope"))
             .compilesWithoutError()
-            .and()
             .generatesFileNamed(
-                StandardLocation.locationFor("CLASS_OUTPUT"),
-                "test",
                 "TestOptimisticFactoryCreationForScopeAnnotation__Factory.class"
             )
     }
 
     @Test
     fun testOptimisticFactoryCreationForScopeAnnotation_shouldFail_WhenScopeAnnotationDoesNotHaveRetention() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestOptimisticFactoryCreationForScopeAnnotation",
-            // language=java
+        val source = javaSource(
+            "TestOptimisticFactoryCreationForScopeAnnotation",
             """
             package test;
             import javax.inject.Inject;
@@ -103,22 +87,18 @@ class RelaxedFactoryForSingletonsTest {
             @CustomScope
             public class TestOptimisticFactoryCreationForScopeAnnotation {
             }
-            """.trimIndent()
+            """
         )
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
-            .processedWith(
-                factoryProcessorsWithAdditionalTypes("test.CustomScope")
-            )
+            .processedWith(factoryProcessorsWithAdditionalTypes("test.CustomScope"))
             .failsToCompile()
     }
 
     @Test
     fun testOptimisticFactoryCreationForScopeAnnotation_shouldFail_WhenScopeAnnotationDoesNotHaveRuntimeRetention() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestOptimisticFactoryCreationForScopeAnnotation",
-            // language=java
+        val source = javaSource(
+            "TestOptimisticFactoryCreationForScopeAnnotation",
             """
             package test;
             import javax.inject.Inject;
@@ -131,14 +111,11 @@ class RelaxedFactoryForSingletonsTest {
             @CustomScope
             public class TestOptimisticFactoryCreationForScopeAnnotation {
             }
-            """.trimIndent()
+            """
         )
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
-            .processedWith(
-                factoryProcessorsWithAdditionalTypes("test.CustomScope")
-            )
+            .processedWith(factoryProcessorsWithAdditionalTypes("test.CustomScope"))
             .failsToCompile()
     }
 }

@@ -16,47 +16,38 @@
  */
 package toothpick.compiler.factory
 
-import com.google.common.truth.Truth
-import com.google.testing.compile.JavaFileObjects
-import com.google.testing.compile.JavaSourceSubjectFactory
 import org.junit.Test
+import toothpick.compiler.*
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryAndMemberInjectorProcessors
-import javax.tools.StandardLocation
 
 class RelaxedFactoryForInjectConstructorTest {
 
     @Test
     fun testOptimisticFactoryCreationForInjectConstructor_shouldWork_whenDefaultConstructorIsPresent() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestOptimisticFactoryCreationForInjectConstructor",
-            // language=java
+        val source = javaSource(
+            "TestOptimisticFactoryCreationForInjectConstructor",
             """
             package test;
             import toothpick.InjectConstructor;
             @InjectConstructor
             public class TestOptimisticFactoryCreationForInjectConstructor {
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesFileNamed(
-                StandardLocation.locationFor("CLASS_OUTPUT"),
-                "test",
                 "TestOptimisticFactoryCreationForInjectConstructor__Factory.class"
             )
     }
 
     @Test
     fun testOptimisticFactoryCreationForInjectConstructor_shouldUse_uniqueConstructorWhenAnnotated() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructor",
             """
             package test;
             import toothpick.InjectConstructor;
@@ -65,14 +56,14 @@ class RelaxedFactoryForInjectConstructorTest {
             public class TestNonEmptyConstructor {
               public TestNonEmptyConstructor(Lazy<String> str, Integer n) {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestNonEmptyConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestNonEmptyConstructor__Factory",
             """
             package test;
+            
             import java.lang.Integer;
             import java.lang.Override;
             import java.lang.String;
@@ -89,48 +80,51 @@ class RelaxedFactoryForInjectConstructorTest {
                 TestNonEmptyConstructor testNonEmptyConstructor = new TestNonEmptyConstructor(param1, param2);
                 return testNonEmptyConstructor;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testOptimisticFactoryCreationForInjectConstructor_shouldHave_referenceToMemberInjector() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructor",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructor",
             """
             package test;
             import toothpick.InjectConstructor;
@@ -141,14 +135,14 @@ class RelaxedFactoryForInjectConstructorTest {
               @Inject String string;
               public TestNonEmptyConstructor(Lazy<String> str, Integer n) {}
             }
-            """.trimIndent()
+            """
         )
 
-        val expectedSource = JavaFileObjects.forSourceString(
-            "test/TestNonEmptyConstructor__Factory",
-            // language=java
+        val expectedSource = expectedJavaSource(
+            "TestNonEmptyConstructor__Factory",
             """
             package test;
+            
             import java.lang.Integer;
             import java.lang.Override;
             import java.lang.String;
@@ -169,48 +163,51 @@ class RelaxedFactoryForInjectConstructorTest {
                 memberInjector.inject(testNonEmptyConstructor, scope);
                 return testNonEmptyConstructor;
               }
+            
               @Override
               public Scope getTargetScope(Scope scope) {
                 return scope;
               }
+            
               @Override
               public boolean hasScopeAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasReleasableAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesSingletonAnnotation() {
                 return false;
               }
+            
               @Override
               public boolean hasProvidesReleasableAnnotation() {
                 return false;
               }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .compilesWithoutError()
-            .and()
             .generatesSources(expectedSource)
     }
 
     @Test
     fun testOptimisticFactoryCreationForInjectConstructor_shouldFail_uniqueConstructorIsAnnotated() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestNonEmptyConstructorInjected",
-            // language=java
+        val source = javaSource(
+            "TestNonEmptyConstructorInjected",
             """
             package test;
             import javax.inject.Inject;
@@ -220,11 +217,10 @@ class RelaxedFactoryForInjectConstructorTest {
             public class TestNonEmptyConstructorInjected {
               @Inject public TestNonEmptyConstructorInjected(Lazy<String> str, Integer n) {}
             }
-           """.trimIndent()
+           """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .failsToCompile()
@@ -236,9 +232,8 @@ class RelaxedFactoryForInjectConstructorTest {
 
     @Test
     fun testOptimisticFactoryCreationForInjectConstructor_shouldFail_multipleConstructors() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestMultipleConstructors",
-            // language=java
+        val source = javaSource(
+            "TestMultipleConstructors",
             """
             package test;
             import javax.inject.Inject;
@@ -249,11 +244,10 @@ class RelaxedFactoryForInjectConstructorTest {
               public TestMultipleConstructors(Lazy<String> str, Integer n) {}
               public TestMultipleConstructors() {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryAndMemberInjectorProcessors())
             .failsToCompile()

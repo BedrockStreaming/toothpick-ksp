@@ -16,19 +16,16 @@
  */
 package toothpick.compiler.factory
 
-import com.google.common.truth.Truth
-import com.google.testing.compile.JavaFileObjects
-import com.google.testing.compile.JavaSourceSubjectFactory
 import org.junit.Test
+import toothpick.compiler.*
 import toothpick.compiler.factory.ProcessorTestUtilities.factoryProcessorsFailingOnNonInjectableClasses
 
 class RelaxedFactoryWarningsTest {
 
     @Test
     fun testOptimisticFactoryCreationForSingleton_shouldFailTheBuild_whenThereIsNoDefaultConstructor() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestOptimisticFactoryCreationForSingleton",
-            // language=java
+        val source = javaSource(
+            "TestOptimisticFactoryCreationForSingleton",
             """
             package test;
             import javax.inject.Inject;
@@ -37,11 +34,10 @@ class RelaxedFactoryWarningsTest {
             public class TestOptimisticFactoryCreationForSingleton {
               TestOptimisticFactoryCreationForSingleton(int a) { }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessorsFailingOnNonInjectableClasses())
             .failsToCompile()
@@ -49,9 +45,8 @@ class RelaxedFactoryWarningsTest {
 
     @Test
     fun testOptimisticFactoryCreationForSingleton_shouldNotFailTheBuild_whenThereIsNoDefaultConstructorButClassIsAnnotated() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestOptimisticFactoryCreationForSingleton",
-            // language=java
+        val source = javaSource(
+            "TestOptimisticFactoryCreationForSingleton",
             """
             package test;
             import javax.inject.Inject;
@@ -61,11 +56,10 @@ class RelaxedFactoryWarningsTest {
             public class TestOptimisticFactoryCreationForSingleton {
               TestOptimisticFactoryCreationForSingleton(int a) { }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessorsFailingOnNonInjectableClasses())
             .compilesWithoutError()
@@ -73,9 +67,8 @@ class RelaxedFactoryWarningsTest {
 
     @Test
     fun testOptimisticFactoryCreationWithInjectedMembers_shouldFailTheBuild_whenThereIsNoDefaultConstructor() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestOptimisticFactoryCreationForSingleton",
-            // language=java
+        val source = javaSource(
+            "TestOptimisticFactoryCreationForSingleton",
             """
             package test;
             import javax.inject.Inject;
@@ -83,11 +76,10 @@ class RelaxedFactoryWarningsTest {
               @Inject String s;
               TestOptimisticFactoryCreationForSingleton(int a) { }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessorsFailingOnNonInjectableClasses())
             .failsToCompile()
@@ -95,9 +87,8 @@ class RelaxedFactoryWarningsTest {
 
     @Test
     fun testOptimisticFactoryCreationWithInjectedMembers_shouldNotFailTheBuild_whenThereIsNoDefaultConstructorButClassIsAnnotated() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestOptimisticFactoryCreationForSingleton",
-            // language=java
+        val source = javaSource(
+            "TestOptimisticFactoryCreationForSingleton",
             """
             package test;
             import javax.inject.Inject;
@@ -106,11 +97,10 @@ class RelaxedFactoryWarningsTest {
               @Inject String s;
               TestOptimisticFactoryCreationForSingleton(int a) { }
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(factoryProcessorsFailingOnNonInjectableClasses())
             .compilesWithoutError()

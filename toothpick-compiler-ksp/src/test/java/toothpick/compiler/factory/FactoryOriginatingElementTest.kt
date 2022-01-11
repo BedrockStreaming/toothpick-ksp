@@ -16,36 +16,33 @@
  */
 package toothpick.compiler.factory
 
-import com.google.common.truth.Truth
-import com.google.testing.compile.JavaFileObjects
-import com.google.testing.compile.JavaSourceSubjectFactory
+import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstance
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import toothpick.compiler.*
 
 class FactoryOriginatingElementTest {
 
     @Test
     fun testOriginatingElement() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestOriginatingElement",
-            // language=java
+        val source = javaSource(
+            "TestOriginatingElement",
             """
             package test;
             import javax.inject.Inject;
             public class TestOriginatingElement {
               @Inject public TestOriginatingElement() {}
             }
-            """.trimIndent()
+            """
         )
 
         val processors = ProcessorTestUtilities.factoryProcessors()
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(processors)
             .compilesWithoutError()
 
-        val factoryProcessor = processors.iterator().next() as FactoryProcessor
+        val factoryProcessor = processors.firstIsInstance<FactoryProcessor>()
         val enclosingElement = factoryProcessor.getOriginatingElement("test.TestOriginatingElement__Factory")
 
         assertTrue(

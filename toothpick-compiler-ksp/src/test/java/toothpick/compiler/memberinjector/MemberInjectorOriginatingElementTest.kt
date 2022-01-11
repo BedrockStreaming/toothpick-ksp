@@ -16,19 +16,17 @@
  */
 package toothpick.compiler.memberinjector
 
-import com.google.common.truth.Truth
-import com.google.testing.compile.JavaFileObjects
-import com.google.testing.compile.JavaSourceSubjectFactory
+import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstance
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import toothpick.compiler.*
 
 class MemberInjectorOriginatingElementTest {
 
     @Test
     fun testOriginatingElement() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestOriginatingElement",
-            // language=java
+        val source = javaSource(
+            "TestOriginatingElement",
             """
             package test;
             import javax.inject.Inject;
@@ -37,17 +35,16 @@ class MemberInjectorOriginatingElementTest {
               public TestOriginatingElement() {}
             }
             class Foo {}
-            """.trimIndent()
+            """
         )
 
         val processors = ProcessorTestUtilities.memberInjectorProcessors()
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(processors)
             .compilesWithoutError()
 
-        val memberInjectorProcessor = processors.iterator().next() as MemberInjectorProcessor
+        val memberInjectorProcessor = processors.firstIsInstance<MemberInjectorProcessor>()
         val enclosingElement = memberInjectorProcessor.getOriginatingElement(
             "test.TestOriginatingElement__MemberInjector"
         )

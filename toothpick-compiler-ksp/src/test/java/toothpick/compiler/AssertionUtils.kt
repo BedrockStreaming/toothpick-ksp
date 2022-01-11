@@ -41,16 +41,23 @@ fun KotlinCompilation.Result.withErrorContaining(error: String): KotlinCompilati
     assertTrue(messages.contains(error))
 }
 
-fun KotlinCompilation.Result.assertGeneratesSource(expected: RawSource) = apply {
-    val actual = sourcesGeneratedByAnnotationProcessor.first { file -> file.name == expected.fileName }
-    assertEquals(expected.contents, actual.readText())
+fun KotlinCompilation.Result.generatesSources(vararg expected: RawSource) = apply {
+    expected.forEach { source -> generatesSource(source) }
 }
 
-fun KotlinCompilation.Result.generatesFileNamed(
-    relativeName: String
-) = apply {
-    val generatedFile = generatedFiles.find { file ->
-        file.name == "$relativeName.class"
-    }
+private fun KotlinCompilation.Result.generatesSource(expected: RawSource) = apply {
+    val actual = sourcesGeneratedByAnnotationProcessor.find { file -> file.name == expected.fileName }
+        ?: error("File ${expected.fileName} not found in: ${sourcesGeneratedByAnnotationProcessor.map { it.name }}")
+
+    assertEquals(
+        expected.contents.trim(),
+        actual.readText()
+            .replace("\r\n", "\n")
+            .trim()
+    )
+}
+
+fun KotlinCompilation.Result.generatesFileNamed(relativeName: String) = apply {
+    val generatedFile = generatedFiles.find { file -> file.name == relativeName }
     assertNotNull(generatedFile)
 }

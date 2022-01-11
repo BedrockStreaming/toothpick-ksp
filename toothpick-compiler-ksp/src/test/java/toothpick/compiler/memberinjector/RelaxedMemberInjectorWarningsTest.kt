@@ -16,19 +16,16 @@
  */
 package toothpick.compiler.memberinjector
 
-import com.google.common.truth.Truth
-import com.google.testing.compile.JavaFileObjects
-import com.google.testing.compile.JavaSourceSubjectFactory
 import org.junit.Test
+import toothpick.compiler.*
 import toothpick.compiler.memberinjector.ProcessorTestUtilities.memberInjectorProcessorsFailingWhenMethodIsNotPackageVisible
 
 class RelaxedMemberInjectorWarningsTest {
 
     @Test
     fun testInjectedMethod_shouldFailTheBuild_whenMethodIsPublic() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestWarningVisibleInjectedMethod",
-            // language=java
+        val source = javaSource(
+            "TestWarningVisibleInjectedMethod",
             """
             package test;
             import javax.inject.Inject;
@@ -36,11 +33,10 @@ class RelaxedMemberInjectorWarningsTest {
             public class TestWarningVisibleInjectedMethod {
               @Inject public void init() {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessorsFailingWhenMethodIsNotPackageVisible())
             .failsToCompile()
@@ -48,9 +44,8 @@ class RelaxedMemberInjectorWarningsTest {
 
     @Test
     fun testInjectedMethod_shouldNotFailTheBuild_whenMethodIsPublicButAnnotated() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestWarningVisibleInjectedMethod",
-            // language=java
+        val source = javaSource(
+            "TestWarningVisibleInjectedMethod",
             """
             package test;
             import javax.inject.Inject;
@@ -59,11 +54,10 @@ class RelaxedMemberInjectorWarningsTest {
               @SuppressWarnings("visible")
               @Inject public void init() {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessorsFailingWhenMethodIsNotPackageVisible())
             .compilesWithoutError()
@@ -71,9 +65,8 @@ class RelaxedMemberInjectorWarningsTest {
 
     @Test
     fun testInjectedMethod_shouldFailTheBuild_whenMethodIsProtected() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestWarningVisibleInjectedMethod",
-            // language=java
+        val source = javaSource(
+            "TestWarningVisibleInjectedMethod",
             """
             package test;
             import javax.inject.Inject;
@@ -81,11 +74,10 @@ class RelaxedMemberInjectorWarningsTest {
             public class TestWarningVisibleInjectedMethod {
               @Inject protected void init() {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessorsFailingWhenMethodIsNotPackageVisible())
             .failsToCompile()
@@ -93,9 +85,8 @@ class RelaxedMemberInjectorWarningsTest {
 
     @Test
     fun testInjectedMethod_shouldNotFailTheBuild_whenMethodIsProtectedButAnnotated() {
-        val source = JavaFileObjects.forSourceString(
-            "test.TestWarningVisibleInjectedMethod",
-            // language=java
+        val source = javaSource(
+            "TestWarningVisibleInjectedMethod",
             """
             package test;
             import javax.inject.Inject;
@@ -104,11 +95,10 @@ class RelaxedMemberInjectorWarningsTest {
               @SuppressWarnings("visible")
               @Inject protected void init() {}
             }
-            """.trimIndent()
+            """
         )
 
-        Truth.assert_()
-            .about(JavaSourceSubjectFactory.javaSource())
+        compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessorsFailingWhenMethodIsNotPackageVisible())
             .compilesWithoutError()
