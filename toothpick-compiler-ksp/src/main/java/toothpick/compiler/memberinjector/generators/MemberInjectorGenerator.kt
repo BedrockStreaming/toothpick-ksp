@@ -21,6 +21,8 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import toothpick.MemberInjector
 import toothpick.Scope
 import toothpick.compiler.common.generators.CodeGenerator
+import toothpick.compiler.common.generators.generatedFQNClassName
+import toothpick.compiler.common.generators.generatedSimpleClassName
 import toothpick.compiler.memberinjector.targets.FieldInjectionTarget
 import toothpick.compiler.memberinjector.targets.MethodInjectionTarget
 import javax.lang.model.element.TypeElement
@@ -51,7 +53,7 @@ class MemberInjectorGenerator(
         // Build class
         return FileSpec.get(
             className.packageName,
-            TypeSpec.classBuilder(fqcn)
+            TypeSpec.classBuilder(targetClass.generatedSimpleClassName + MEMBER_INJECTOR_SUFFIX)
                 .addModifiers(KModifier.PUBLIC, KModifier.FINAL)
                 .addSuperinterface(
                     MemberInjector::class.asClassName().parameterizedBy(className)
@@ -160,8 +162,7 @@ class MemberInjectorGenerator(
         }
     }
 
-    override val fqcn: String
-        get() = targetClass.generatedFQNClassName + MEMBER_INJECTOR_SUFFIX
+    override val fqcn: String = targetClass.generatedFQNClassName + MEMBER_INJECTOR_SUFFIX
 
     companion object {
         private const val MEMBER_INJECTOR_SUFFIX = "__MemberInjector"

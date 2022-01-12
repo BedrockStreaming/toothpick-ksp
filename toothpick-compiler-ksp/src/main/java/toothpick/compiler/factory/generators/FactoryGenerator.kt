@@ -22,6 +22,9 @@ import toothpick.Factory
 import toothpick.MemberInjector
 import toothpick.Scope
 import toothpick.compiler.common.generators.CodeGenerator
+import toothpick.compiler.common.generators.generatedFQNClassName
+import toothpick.compiler.common.generators.generatedSimpleClassName
+import toothpick.compiler.common.generators.simpleClassName
 import toothpick.compiler.factory.targets.ConstructorInjectionTarget
 import javax.inject.Singleton
 import javax.lang.model.util.Types
@@ -40,7 +43,7 @@ class FactoryGenerator(
         // Interface to implement
         val className = constructorInjectionTarget.builtClass.asClassName()
         val parameterizedTypeName = Factory::class.asClassName().parameterizedBy(className)
-        val factoryClassName = constructorInjectionTarget.builtClass.generatedFQNClassName + FACTORY_SUFFIX
+        val factoryClassName = constructorInjectionTarget.builtClass.generatedSimpleClassName + FACTORY_SUFFIX
 
         // Build class
         val factoryTypeSpec = TypeSpec.classBuilder(factoryClassName)
@@ -73,16 +76,15 @@ class FactoryGenerator(
                 .builder("memberInjector", memberInjectorSuper, KModifier.PRIVATE)
                 .initializer(
                     "\$L__MemberInjector()",
-                        constructorInjectionTarget
-                            .superClassThatNeedsMemberInjection
-                            .generatedFQNClassName
+                    constructorInjectionTarget
+                        .superClassThatNeedsMemberInjection
+                        .generatedFQNClassName
                 )
                 .build()
         )
     }
 
-    override val fqcn: String
-        get() = constructorInjectionTarget.builtClass.generatedFQNClassName + FACTORY_SUFFIX
+    override val fqcn: String = constructorInjectionTarget.builtClass.generatedFQNClassName + FACTORY_SUFFIX
 
     private fun TypeSpec.Builder.emitCreateInstance(): TypeSpec.Builder = apply {
         val className = constructorInjectionTarget.builtClass.asClassName()
