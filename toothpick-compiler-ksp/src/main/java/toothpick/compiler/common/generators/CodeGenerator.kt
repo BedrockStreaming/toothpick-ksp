@@ -16,9 +16,6 @@
  */
 package toothpick.compiler.common.generators
 
-import com.squareup.kotlinpoet.*
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import toothpick.compiler.common.generators.targets.ParamInjectionTarget
 import javax.lang.model.util.Types
 
 /** Common base interface for all code generators.  */

@@ -1,6 +1,5 @@
 package toothpick.compiler.common.generators
 
-import com.squareup.kotlinpoet.ClassName
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
 
@@ -18,9 +17,6 @@ internal val TypeElement.generatedSimpleClassName: String
         }
         return result
     }
-
-internal val ClassName.simpleClassName: String
-    get() = simpleNames.joinToString(".")
 
 internal val TypeElement.generatedPackageName: String
     get() {
