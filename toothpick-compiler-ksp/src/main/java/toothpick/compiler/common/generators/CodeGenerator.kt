@@ -19,8 +19,6 @@ package toothpick.compiler.common.generators
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import toothpick.compiler.common.generators.targets.ParamInjectionTarget
-import javax.lang.model.element.ElementKind
-import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Types
 
 /** Common base interface for all code generators.  */
@@ -52,18 +50,18 @@ abstract class CodeGenerator(protected val typeUtil: Types) {
         }
 
         return CodeBlock.builder()
-            .add("\$L(\$T::class.java\$L)", scopeGetMethodName, className, injectionName)
+            .add("%L(%T::class.java%L)", scopeGetMethodName, className, injectionName)
             .build()
     }
 
     protected fun ParamInjectionTarget.getParamType(): TypeName {
         return when (kind) {
             ParamInjectionTarget.Kind.INSTANCE ->
-                typeUtil.erasure(memberClass.asType()).asTypeName()
+                memberClass.asType().erased(typeUtil).asTypeName()
             else -> {
                 memberClass.asClassName()
                     .parameterizedBy(
-                        typeUtil.erasure(kindParamClass.asType()).asTypeName()
+                        kindParamClass.asType().erased(typeUtil).asTypeName()
                     )
             }
         }

@@ -24,7 +24,6 @@ import toothpick.Scope
 import toothpick.compiler.common.generators.CodeGenerator
 import toothpick.compiler.common.generators.generatedFQNClassName
 import toothpick.compiler.common.generators.generatedSimpleClassName
-import toothpick.compiler.common.generators.simpleClassName
 import toothpick.compiler.factory.targets.ConstructorInjectionTarget
 import javax.inject.Singleton
 import javax.lang.model.util.Types
@@ -75,7 +74,7 @@ class FactoryGenerator(
             PropertySpec
                 .builder("memberInjector", memberInjectorSuper, KModifier.PRIVATE)
                 .initializer(
-                    "\$L__MemberInjector()",
+                    "%L__MemberInjector()",
                     constructorInjectionTarget
                         .superClassThatNeedsMemberInjection
                         .generatedFQNClassName
@@ -105,10 +104,8 @@ class FactoryGenerator(
                     }
                 }
 
-        val simpleClassName = className.simpleClassName
-        val varName: String =
-            className.simpleName[0].lowercaseChar() +
-                className.simpleName.substring(1)
+        val varName = className.simpleName
+            .replaceFirstChar { first -> first.lowercaseChar() }
 
         val throwsThrowable = constructorInjectionTarget.throwsThrowable
 
@@ -120,7 +117,7 @@ class FactoryGenerator(
 
                 constructorInjectionTarget.parameters.forEachIndexed { i, param ->
                     addStatement(
-                        "val \$L: \$T = scope.\$L",
+                        "val %L: %T = scope.%L",
                         "param${i + 1}",
                         param.getParamType(),
                         param.getInvokeScopeGetMethodWithNameCodeBlock()
@@ -128,23 +125,23 @@ class FactoryGenerator(
                 }
 
                 addStatement(
-                    "val \$L: \$T = \$T(\$L)",
+                    "val %L: %T = %T(%L)",
                     varName,
-                    simpleClassName,
-                    simpleClassName,
+                    className,
+                    className,
                     List(constructorInjectionTarget.parameters.size) { i -> "param${i + 1}" }
                         .joinToString(", ")
                 )
 
                 if (constructorInjectionTarget.superClassThatNeedsMemberInjection != null) {
-                    addStatement("memberInjector.inject(\$L, scope)", varName)
+                    addStatement("memberInjector.inject(%L, scope)", varName)
                 }
 
-                addStatement("return \$L", varName)
+                addStatement("return %L", varName)
 
                 if (throwsThrowable) {
-                    nextControlFlow("catch(ex: \$T)", Throwable::class.asClassName())
-                    addStatement("throw \$T(ex)", RuntimeException::class.asClassName())
+                    nextControlFlow("catch(ex: %T)", Throwable::class.asClassName())
+                    addStatement("throw %T(ex)", RuntimeException::class.asClassName())
                     endControlFlow()
                 }
             }
@@ -162,7 +159,7 @@ class FactoryGenerator(
                 .addParameter("scope", Scope::class)
                 .returns(Scope::class)
                 .addStatement(
-                    "return scope\$L",
+                    "return scope%L",
                     parentScopeCodeBlock.toString()
                 )
                 .build()
@@ -177,7 +174,7 @@ class FactoryGenerator(
                 .addAnnotation(Override::class)
                 .addModifiers(KModifier.PUBLIC)
                 .returns(Boolean::class)
-                .addStatement("return \$L", hasScopeAnnotation)
+                .addStatement("return %L", hasScopeAnnotation)
                 .build()
         )
     }
@@ -189,7 +186,7 @@ class FactoryGenerator(
                 .addModifiers(KModifier.PUBLIC)
                 .returns(Boolean::class)
                 .addStatement(
-                    "return \$L",
+                    "return %L",
                     constructorInjectionTarget.hasSingletonAnnotation
                 )
                 .build()
@@ -203,7 +200,7 @@ class FactoryGenerator(
                 .addModifiers(KModifier.PUBLIC)
                 .returns(Boolean::class)
                 .addStatement(
-                    "return \$L",
+                    "return %L",
                     constructorInjectionTarget.hasReleasableAnnotation
                 )
                 .build()
@@ -218,7 +215,7 @@ class FactoryGenerator(
                 .addModifiers(KModifier.PUBLIC)
                 .returns(Boolean::class)
                 .addStatement(
-                    "return \$L",
+                    "return %L",
                     constructorInjectionTarget.hasProvidesSingletonInScopeAnnotation
                 )
                 .build()
@@ -232,7 +229,7 @@ class FactoryGenerator(
                 .addModifiers(KModifier.PUBLIC)
                 .returns(Boolean::class)
                 .addStatement(
-                    "return \$L",
+                    "return %L",
                     constructorInjectionTarget.hasProvidesReleasableAnnotation
                 )
                 .build()
@@ -244,7 +241,7 @@ class FactoryGenerator(
             null -> CodeBlock.of("")
             // there is no scope name or the current @Scoped annotation.
             Singleton::class.java.name -> CodeBlock.of(".getRootScope()")
-            else -> CodeBlock.of(".getParentScope(\$L.class)", scopeName)
+            else -> CodeBlock.of(".getParentScope(%L::class.java)", scopeName)
         }
 
     companion object {
