@@ -20,8 +20,7 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import toothpick.MemberInjector
 import toothpick.Scope
-import toothpick.compiler.common.generators.CodeGenerator
-import toothpick.compiler.common.generators.erased
+import toothpick.compiler.common.generators.*
 import toothpick.compiler.common.generators.generatedFQNClassName
 import toothpick.compiler.common.generators.generatedSimpleClassName
 import toothpick.compiler.memberinjector.targets.FieldInjectionTarget
@@ -118,9 +117,9 @@ class MemberInjectorGenerator(
                 methodInjectionTarget.parameters
                     .forEachIndexed { paramIndex, paramInjectionTarget ->
                         addStatement(
-                            "%T %L = scope.%L",
-                            paramInjectionTarget.getParamType(),
+                            "val %L: %T = scope.%L",
                             "param${paramIndex + 1}",
+                            paramInjectionTarget.getParamType(typeUtil),
                             paramInjectionTarget.getInvokeScopeGetMethodWithNameCodeBlock()
                         )
                     }

@@ -21,9 +21,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import toothpick.Factory
 import toothpick.MemberInjector
 import toothpick.Scope
-import toothpick.compiler.common.generators.CodeGenerator
-import toothpick.compiler.common.generators.generatedFQNClassName
-import toothpick.compiler.common.generators.generatedSimpleClassName
+import toothpick.compiler.common.generators.*
 import toothpick.compiler.factory.targets.ConstructorInjectionTarget
 import javax.inject.Singleton
 import javax.lang.model.util.Types
@@ -41,24 +39,26 @@ class FactoryGenerator(
     override fun brewJava(): String {
         // Interface to implement
         val className = constructorInjectionTarget.builtClass.asClassName()
-        val parameterizedTypeName = Factory::class.asClassName().parameterizedBy(className)
-        val factoryClassName = constructorInjectionTarget.builtClass.generatedSimpleClassName + FACTORY_SUFFIX
+        val simpleClassName = constructorInjectionTarget.builtClass.generatedSimpleClassName
 
         // Build class
-        val factoryTypeSpec = TypeSpec.classBuilder(factoryClassName)
-            .addModifiers(KModifier.PUBLIC, KModifier.FINAL)
-            .addSuperinterface(parameterizedTypeName)
-            .emitSuperMemberInjectorFieldIfNeeded()
-            .emitCreateInstance()
-            .emitGetTargetScope()
-            .emitHasScopeAnnotation()
-            .emitHasSingletonAnnotation()
-            .emitHasReleasableAnnotation()
-            .emitHasProvidesSingletonAnnotation()
-            .emitHasProvidesReleasableAnnotation()
-            .build()
-
-        return FileSpec.get(className.packageName, factoryTypeSpec).toString()
+        return FileSpec.get(
+            packageName = className.packageName,
+            TypeSpec.classBuilder(simpleClassName + FACTORY_SUFFIX)
+                .addModifiers(KModifier.PUBLIC, KModifier.FINAL)
+                .addSuperinterface(
+                    Factory::class.asClassName().parameterizedBy(className)
+                )
+                .emitSuperMemberInjectorFieldIfNeeded()
+                .emitCreateInstance()
+                .emitGetTargetScope()
+                .emitHasScopeAnnotation()
+                .emitHasSingletonAnnotation()
+                .emitHasReleasableAnnotation()
+                .emitHasProvidesSingletonAnnotation()
+                .emitHasProvidesReleasableAnnotation()
+                .build()
+        ).toString()
     }
 
     private fun TypeSpec.Builder.emitSuperMemberInjectorFieldIfNeeded() = apply {
@@ -119,7 +119,7 @@ class FactoryGenerator(
                     addStatement(
                         "val %L: %T = scope.%L",
                         "param${i + 1}",
-                        param.getParamType(),
+                        param.getParamType(typeUtil),
                         param.getInvokeScopeGetMethodWithNameCodeBlock()
                     )
                 }
