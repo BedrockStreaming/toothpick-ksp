@@ -22,7 +22,7 @@ dependencies {
     api 'com.github.stephanenicolas.toothpick:toothpick:3.1.0'
 
     api deps.inject
-    api deps.javapoet
+    api deps.kotlinpoet
 
     testImplementation deps.junit4
     testImplementation deps.compiletesting_kt

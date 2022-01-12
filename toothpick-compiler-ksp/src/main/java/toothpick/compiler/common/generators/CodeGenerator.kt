@@ -16,10 +16,8 @@
  */
 package toothpick.compiler.common.generators
 
-import com.squareup.javapoet.ClassName
-import com.squareup.javapoet.CodeBlock
-import com.squareup.javapoet.ParameterizedTypeName
-import com.squareup.javapoet.TypeName
+import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import toothpick.compiler.common.generators.targets.ParamInjectionTarget
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
@@ -35,40 +33,38 @@ abstract class CodeGenerator(protected val typeUtil: Types) {
      */
     abstract fun brewJava(): String
 
-    protected fun getInvokeScopeGetMethodWithNameCodeBlock(
-        paramInjectionTarget: ParamInjectionTarget
-    ): CodeBlock {
-        val injectionName = if (paramInjectionTarget.name == null) ""
-        else ", \"${paramInjectionTarget.name}\""
+    protected fun ParamInjectionTarget.getInvokeScopeGetMethodWithNameCodeBlock(): CodeBlock {
+        val injectionName = if (name == null) ""
+        else ", \"$name\""
 
-        checkNotNull(paramInjectionTarget.kind) { "The kind can't be null." }
+        checkNotNull(kind) { "The kind can't be null." }
 
-        val scopeGetMethodName: String = when (paramInjectionTarget.kind) {
+        val scopeGetMethodName: String = when (kind) {
             ParamInjectionTarget.Kind.INSTANCE -> "getInstance"
             ParamInjectionTarget.Kind.PROVIDER -> "getProvider"
             ParamInjectionTarget.Kind.LAZY -> "getLazy"
         }
 
-        val className: ClassName = when (paramInjectionTarget.kind) {
-            ParamInjectionTarget.Kind.INSTANCE -> ClassName.get(paramInjectionTarget.memberClass)
-            ParamInjectionTarget.Kind.PROVIDER -> ClassName.get(paramInjectionTarget.kindParamClass)
-            ParamInjectionTarget.Kind.LAZY -> ClassName.get(paramInjectionTarget.kindParamClass)
+        val className: ClassName = when (kind) {
+            ParamInjectionTarget.Kind.INSTANCE -> memberClass.asClassName()
+            ParamInjectionTarget.Kind.PROVIDER -> kindParamClass.asClassName()
+            ParamInjectionTarget.Kind.LAZY -> kindParamClass.asClassName()
         }
 
         return CodeBlock.builder()
-            .add("\$L(\$T.class\$L)", scopeGetMethodName, className, injectionName)
+            .add("\$L(\$T::class.java\$L)", scopeGetMethodName, className, injectionName)
             .build()
     }
 
-    protected fun getParamType(paramInjectionTarget: ParamInjectionTarget): TypeName {
-        return when (paramInjectionTarget.kind) {
+    protected fun ParamInjectionTarget.getParamType(): TypeName {
+        return when (kind) {
             ParamInjectionTarget.Kind.INSTANCE ->
-                TypeName.get(typeUtil.erasure(paramInjectionTarget.memberClass.asType()))
+                typeUtil.erasure(memberClass.asType()).asTypeName()
             else -> {
-                ParameterizedTypeName.get(
-                    ClassName.get(paramInjectionTarget.memberClass),
-                    ClassName.get(typeUtil.erasure(paramInjectionTarget.kindParamClass.asType()))
-                )
+                memberClass.asClassName()
+                    .parameterizedBy(
+                        typeUtil.erasure(kindParamClass.asType()).asTypeName()
+                    )
             }
         }
     }
@@ -80,45 +76,33 @@ abstract class CodeGenerator(protected val typeUtil: Types) {
     companion object {
 
         @JvmStatic
-        protected val LINE_SEPARATOR: String = System.getProperty("line.separator")
+        protected val TypeElement.generatedFQNClassName: String
+            get() = "$generatedPackageName.$generatedSimpleClassName"
 
-        @JvmStatic
-        protected fun getGeneratedFQNClassName(typeElement: TypeElement): String =
-            "${getGeneratedPackageName(typeElement)}.${getGeneratedSimpleClassName(typeElement)}"
-
-        @JvmStatic
-        protected fun getGeneratedSimpleClassName(typeElement: TypeElement): String {
-            var currentTypeElement = typeElement
-            var result = currentTypeElement.simpleName.toString()
-            // deals with inner classes
-            while (currentTypeElement.enclosingElement.kind != ElementKind.PACKAGE) {
-                result = "${currentTypeElement.enclosingElement.simpleName}$$result"
-                currentTypeElement = currentTypeElement.enclosingElement as TypeElement
-            }
-            return result
-        }
-
-        @JvmStatic
-        protected fun getSimpleClassName(className: ClassName): String {
-            return buildString {
-                val simpleNames = className.simpleNames()
-                for (i in simpleNames.indices) {
-                    val name = simpleNames[i]
-                    append(name)
-                    if (i != simpleNames.size - 1) {
-                        append(".")
-                    }
+        protected val TypeElement.generatedSimpleClassName: String
+            get() {
+                var currentTypeElement = this
+                var result = currentTypeElement.simpleName.toString()
+                // deals with inner classes
+                while (currentTypeElement.enclosingElement.kind != ElementKind.PACKAGE) {
+                    result = "${currentTypeElement.enclosingElement.simpleName}$$result"
+                    currentTypeElement = currentTypeElement.enclosingElement as TypeElement
                 }
+                return result
             }
-        }
 
-        protected fun getGeneratedPackageName(typeElement: TypeElement): String {
-            // deals with inner classes
-            var currentTypeElement = typeElement
-            while (currentTypeElement.enclosingElement.kind != ElementKind.PACKAGE) {
-                currentTypeElement = currentTypeElement.enclosingElement as TypeElement
+        @JvmStatic
+        protected val ClassName.simpleClassName: String
+            get() = simpleNames.joinToString(".")
+
+        protected val TypeElement.generatedPackageName: String
+            get() {
+                // deals with inner classes
+                var currentTypeElement = this
+                while (currentTypeElement.enclosingElement.kind != ElementKind.PACKAGE) {
+                    currentTypeElement = currentTypeElement.enclosingElement as TypeElement
+                }
+                return currentTypeElement.enclosingElement.toString()
             }
-            return currentTypeElement.enclosingElement.toString()
-        }
     }
 }
