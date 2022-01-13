@@ -44,7 +44,7 @@ class MemberInjectorGenerator(
         }
     }
 
-    override fun brewJava(): String {
+    override fun brewCode(): FileSpec {
         // Interface to implement
         val className = targetClass.asClassName()
 
@@ -59,7 +59,7 @@ class MemberInjectorGenerator(
                 .emitSuperMemberInjectorFieldIfNeeded()
                 .emitInjectMethod(fieldInjectionTargetList, methodInjectionTargetList)
                 .build()
-        ).toString()
+        )
     }
 
     private fun TypeSpec.Builder.emitSuperMemberInjectorFieldIfNeeded(): TypeSpec.Builder = apply {
@@ -91,8 +91,7 @@ class MemberInjectorGenerator(
     ): TypeSpec.Builder = apply {
         addFunction(
             FunSpec.builder("inject")
-                .addAnnotation(Override::class)
-                .addModifiers(KModifier.PUBLIC)
+                .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
                 .addParameter("target", targetClass.asClassName())
                 .addParameter("scope", Scope::class)
                 .apply {
