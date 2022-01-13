@@ -21,8 +21,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import toothpick.MemberInjector
 import toothpick.Scope
 import toothpick.compiler.common.generators.*
-import toothpick.compiler.common.generators.generatedFQNClassName
-import toothpick.compiler.common.generators.generatedSimpleClassName
 import toothpick.compiler.memberinjector.targets.FieldInjectionTarget
 import toothpick.compiler.memberinjector.targets.MethodInjectionTarget
 import javax.lang.model.element.TypeElement
@@ -37,8 +35,8 @@ class MemberInjectorGenerator(
     private val superClassThatNeedsInjection: TypeElement?,
     private val fieldInjectionTargetList: List<FieldInjectionTarget>?,
     private val methodInjectionTargetList: List<MethodInjectionTarget>?,
-    types: Types
-) : CodeGenerator(types) {
+    private val typeUtil: Types
+) : CodeGenerator {
 
     init {
         require(!(fieldInjectionTargetList == null && methodInjectionTargetList == null)) {

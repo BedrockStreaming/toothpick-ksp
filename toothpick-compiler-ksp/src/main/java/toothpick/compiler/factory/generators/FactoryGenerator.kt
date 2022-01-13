@@ -31,10 +31,10 @@ import javax.lang.model.util.Types
  * is created for a class a soon as it contains an [javax.inject.Inject] annotated
  * constructor. See Optimistic creation of factories in TP wiki.
  */
-class FactoryGenerator(
+open class FactoryGenerator(
     private val constructorInjectionTarget: ConstructorInjectionTarget,
-    types: Types
-) : CodeGenerator(types) {
+    private val typeUtil: Types
+) : CodeGenerator {
 
     override fun brewJava(): String {
         // Interface to implement
