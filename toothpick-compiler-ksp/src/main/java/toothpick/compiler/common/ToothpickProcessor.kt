@@ -59,7 +59,7 @@ abstract class ToothpickProcessor : AbstractProcessor() {
 
     override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.latestSupported()
 
-    protected fun writeToFile(codeGenerator: CodeGenerator, fileDescription: String?): Boolean {
+    protected fun writeToFile(codeGenerator: CodeGenerator, fileDescription: String): Boolean {
         return try {
             codeGenerator.brewCode().writeTo(filer)
             true

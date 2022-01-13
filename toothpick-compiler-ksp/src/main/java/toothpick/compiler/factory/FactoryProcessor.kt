@@ -76,108 +76,76 @@ class FactoryProcessor : ToothpickProcessor() {
     override fun getSupportedAnnotationTypes(): Set<String> = options.annotationTypes
 
     override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
-        val mapTypeElementToConstructorInjectionTarget = findAndParseTargets(roundEnv, annotations)
+        val mapTypeElementToConstructorInjectionTarget: Map<TypeElement, ConstructorInjectionTarget> =
+            with(roundEnv) {
+                createFactoriesForClassesAnnotatedWithInjectConstructor() +
+                    createFactoriesForClassesWithInjectAnnotatedConstructors() +
+                    createFactoriesForClassesAnnotatedWith(ProvidesSingleton::class.java) +
+                    createFactoriesForClassesWithInjectAnnotatedFields() +
+                    createFactoriesForClassesWithInjectAnnotatedMethods() +
+                    createFactoriesForClassesAnnotatedWithScopeAnnotations(annotations)
+            }
 
         // Generate Factories
-        for ((typeElement, constructorInjectionTarget) in mapTypeElementToConstructorInjectionTarget) {
-            val factoryGenerator = FactoryGenerator(constructorInjectionTarget, typeUtils)
-            writeToFile(
-                codeGenerator = factoryGenerator,
-                fileDescription = "Factory for type %s".format(typeElement)
-            )
-            allRoundsGeneratedToTypeElement[factoryGenerator.fqcn] = typeElement
-        }
+        mapTypeElementToConstructorInjectionTarget
+            .mapValues { (_, target) -> FactoryGenerator(target, typeUtils) }
+            .forEach { (typeElement, factoryGenerator) ->
+                writeToFile(
+                    codeGenerator = factoryGenerator,
+                    fileDescription = "Factory for type $typeElement"
+                )
+
+                allRoundsGeneratedToTypeElement[factoryGenerator.fqcn] = typeElement
+            }
+
         return false
     }
 
-    private fun findAndParseTargets(
-        roundEnv: RoundEnvironment,
-        annotations: Set<TypeElement>
-    ): Map<TypeElement, ConstructorInjectionTarget> {
-        val map = mutableMapOf<TypeElement, ConstructorInjectionTarget>()
-        createFactoriesForClassesAnnotatedWithInjectConstructor(roundEnv, map)
-        createFactoriesForClassesWithInjectAnnotatedConstructors(roundEnv, map)
-        createFactoriesForClassesAnnotatedWith(roundEnv, ProvidesSingleton::class.java, map)
-        createFactoriesForClassesWithInjectAnnotatedFields(roundEnv, map)
-        createFactoriesForClassesWithInjectAnnotatedMethods(roundEnv, map)
-        createFactoriesForClassesAnnotatedWithScopeAnnotations(roundEnv, annotations, map)
-        return map
-    }
-
-    private fun createFactoriesForClassesAnnotatedWithScopeAnnotations(
-        roundEnv: RoundEnvironment,
-        annotations: Set<TypeElement>,
-        mapTypeElementToConstructorInjectionTarget: MutableMap<TypeElement, ConstructorInjectionTarget>
-    ) {
-        for (annotation in annotations) {
-            if (annotation.hasAnnotation<Scope>()) {
+    private fun RoundEnvironment.createFactoriesForClassesAnnotatedWithScopeAnnotations(annotations: Set<TypeElement>): List<Pair<TypeElement, ConstructorInjectionTarget>> {
+        return annotations
+            .filter { annotation -> annotation.hasAnnotation<Scope>() }
+            .flatMap { annotation ->
                 checkScopeAnnotationValidity(annotation)
-                createFactoriesForClassesAnnotatedWith(roundEnv, annotation, mapTypeElementToConstructorInjectionTarget)
+                createFactoriesForClassesAnnotatedWith(annotation)
             }
-        }
     }
 
-    private fun createFactoriesForClassesWithInjectAnnotatedMethods(
-        roundEnv: RoundEnvironment,
-        mapTypeElementToConstructorInjectionTarget: MutableMap<TypeElement, ConstructorInjectionTarget>
-    ) {
-        roundEnv.getElementsAnnotatedWith(Inject::class.java)
+    private fun RoundEnvironment.createFactoriesForClassesWithInjectAnnotatedMethods(): List<Pair<TypeElement, ConstructorInjectionTarget>> {
+        return getElementsAnnotatedWith(Inject::class.java)
             .methods
-            .forEach { methodElement ->
-                methodElement.enclosingElement.processClassContainingInjectAnnotatedMember(
-                    mapTypeElementToConstructorInjectionTarget = mapTypeElementToConstructorInjectionTarget
-                )
+            .mapNotNull { methodElement ->
+                methodElement.enclosingElement.processClassContainingInjectAnnotatedMember()
             }
     }
 
-    private fun createFactoriesForClassesWithInjectAnnotatedFields(
-        roundEnv: RoundEnvironment,
-        mapTypeElementToConstructorInjectionTarget: MutableMap<TypeElement, ConstructorInjectionTarget>
-    ) {
-        roundEnv.getElementsAnnotatedWith(Inject::class.java)
+    private fun RoundEnvironment.createFactoriesForClassesWithInjectAnnotatedFields(): List<Pair<TypeElement, ConstructorInjectionTarget>> {
+        return getElementsAnnotatedWith(Inject::class.java)
             .fields
-            .forEach { fieldElement ->
-                fieldElement.enclosingElement.processClassContainingInjectAnnotatedMember(
-                    mapTypeElementToConstructorInjectionTarget = mapTypeElementToConstructorInjectionTarget
-                )
+            .mapNotNull { fieldElement ->
+                fieldElement.enclosingElement.processClassContainingInjectAnnotatedMember()
             }
     }
 
-    private fun createFactoriesForClassesAnnotatedWith(
-        roundEnv: RoundEnvironment,
-        annotationClass: Class<out Annotation?>,
-        mapTypeElementToConstructorInjectionTarget: MutableMap<TypeElement, ConstructorInjectionTarget>
-    ) {
-        roundEnv.getElementsAnnotatedWith(annotationClass)
+    private fun RoundEnvironment.createFactoriesForClassesAnnotatedWith(annotationClass: Class<out Annotation?>): List<Pair<TypeElement, ConstructorInjectionTarget>> {
+        return getElementsAnnotatedWith(annotationClass)
             .types
-            .forEach { annotatedElement ->
-                annotatedElement.processClassContainingInjectAnnotatedMember(
-                    mapTypeElementToConstructorInjectionTarget = mapTypeElementToConstructorInjectionTarget
-                )
+            .mapNotNull { annotatedElement ->
+                annotatedElement.processClassContainingInjectAnnotatedMember()
             }
     }
 
-    private fun createFactoriesForClassesAnnotatedWith(
-        roundEnv: RoundEnvironment,
-        annotationType: TypeElement,
-        mapTypeElementToConstructorInjectionTarget: MutableMap<TypeElement, ConstructorInjectionTarget>
-    ) {
-        roundEnv.getElementsAnnotatedWith(annotationType)
+    private fun RoundEnvironment.createFactoriesForClassesAnnotatedWith(annotationType: TypeElement): List<Pair<TypeElement, ConstructorInjectionTarget>> {
+        return getElementsAnnotatedWith(annotationType)
             .types
-            .forEach {
-                it.processClassContainingInjectAnnotatedMember(
-                    mapTypeElementToConstructorInjectionTarget = mapTypeElementToConstructorInjectionTarget
-                )
+            .mapNotNull { type ->
+                type.processClassContainingInjectAnnotatedMember()
             }
     }
 
-    private fun createFactoriesForClassesWithInjectAnnotatedConstructors(
-        roundEnv: RoundEnvironment,
-        mapTypeElementToConstructorInjectionTarget: MutableMap<TypeElement, ConstructorInjectionTarget>
-    ) {
-        roundEnv.getElementsAnnotatedWith(Inject::class.java)
+    private fun RoundEnvironment.createFactoriesForClassesWithInjectAnnotatedConstructors(): Map<TypeElement, ConstructorInjectionTarget> {
+        return getElementsAnnotatedWith(Inject::class.java)
             .constructors
-            .forEach { constructorElement ->
+            .mapNotNull { constructorElement ->
                 val enclosingElement = constructorElement.enclosingElement as TypeElement
                 if (!constructorElement.isSingleInjectAnnotatedConstructor()) {
                     error(
@@ -187,19 +155,15 @@ class FactoryProcessor : ToothpickProcessor() {
                     )
                 }
 
-                constructorElement.processInjectAnnotatedConstructor(
-                    targetClassMap = mapTypeElementToConstructorInjectionTarget
-                )
+                constructorElement.processInjectAnnotatedConstructor()
             }
+            .toMap()
     }
 
-    private fun createFactoriesForClassesAnnotatedWithInjectConstructor(
-        roundEnv: RoundEnvironment,
-        mapTypeElementToConstructorInjectionTarget: MutableMap<TypeElement, ConstructorInjectionTarget>
-    ) {
-        roundEnv.getElementsAnnotatedWith(InjectConstructor::class.java)
+    private fun RoundEnvironment.createFactoriesForClassesAnnotatedWithInjectConstructor(): Map<TypeElement, ConstructorInjectionTarget> {
+        return getElementsAnnotatedWith(InjectConstructor::class.java)
             .types
-            .forEach { annotatedTypeElement ->
+            .mapNotNull { annotatedTypeElement ->
                 val constructorElements = annotatedTypeElement.enclosedElements.constructors
                 val firstConstructor = constructorElements.firstOrNull()
 
@@ -207,34 +171,28 @@ class FactoryProcessor : ToothpickProcessor() {
                     && firstConstructor != null
                     && !firstConstructor.hasAnnotation<Inject>()
                 ) {
-                    firstConstructor.processInjectAnnotatedConstructor(
-                        targetClassMap = mapTypeElementToConstructorInjectionTarget
-                    )
+                    firstConstructor.processInjectAnnotatedConstructor()
                 } else {
                     error(
                         constructorElements.firstOrNull(),
                         "Class %s is annotated with @InjectConstructor. Therefore, It must have one unique constructor and it should not be annotated with @Inject.",
                         annotatedTypeElement.qualifiedName
                     )
+                    null
                 }
             }
+            .toMap()
     }
 
-    private fun Element.processClassContainingInjectAnnotatedMember(
-        mapTypeElementToConstructorInjectionTarget: MutableMap<TypeElement, ConstructorInjectionTarget>
-    ) {
+    private fun Element.processClassContainingInjectAnnotatedMember(): Pair<TypeElement, ConstructorInjectionTarget>? {
         val typeElement = asType().asElement(typeUtils) as TypeElement
-
-        // the class is already known
-        if (mapTypeElementToConstructorInjectionTarget.containsKey(typeElement)) return
-        if (typeElement.isExcludedByFilters()) return
+        if (typeElement.isExcludedByFilters()) return null
 
         // Verify common generated code restrictions.
-        if (!typeElement.canTypeHaveAFactory()) return
+        if (!typeElement.canTypeHaveAFactory()) return null
 
-        typeElement.createConstructorInjectionTarget()?.let { constructorInjectionTarget ->
-            mapTypeElementToConstructorInjectionTarget[typeElement] = constructorInjectionTarget
-        }
+        val target = typeElement.createConstructorInjectionTarget()
+        return if (target == null) null else typeElement to target
     }
 
     private fun Element.isSingleInjectAnnotatedConstructor(): Boolean {
@@ -244,24 +202,22 @@ class FactoryProcessor : ToothpickProcessor() {
             .all { element -> element == this || !element.hasAnnotation<Inject>() }
     }
 
-    private fun ExecutableElement.processInjectAnnotatedConstructor(
-        targetClassMap: MutableMap<TypeElement, ConstructorInjectionTarget>
-    ) {
+    private fun ExecutableElement.processInjectAnnotatedConstructor(): Pair<TypeElement, ConstructorInjectionTarget>? {
         val enclosingElement = enclosingElement as TypeElement
 
         // Verify common generated code restrictions.
-        if (!isValidInjectAnnotatedConstructor()) return
-        if (enclosingElement.isExcludedByFilters()) return
+        if (!isValidInjectAnnotatedConstructor()) return null
+        if (enclosingElement.isExcludedByFilters()) return null
         if (!enclosingElement.canTypeHaveAFactory()) {
             error(
                 enclosingElement,
                 "The class %s is abstract or private. It cannot have an injected constructor.",
                 enclosingElement.qualifiedName
             )
-            return
+            return null
         }
 
-        targetClassMap[enclosingElement] = createConstructorInjectionTarget()
+        return enclosingElement to createConstructorInjectionTarget()
     }
 
     private fun ExecutableElement.isValidInjectAnnotatedConstructor(): Boolean {
@@ -312,19 +268,17 @@ class FactoryProcessor : ToothpickProcessor() {
         val superClassWithInjectedMembers =
             enclosingElement.getMostDirectSuperClassWithInjectedMembers(onlyParents = false)
 
-        val constructorInjectionTarget = ConstructorInjectionTarget(
+        return ConstructorInjectionTarget(
             builtClass = enclosingElement,
             scopeName = scopeName,
             hasSingletonAnnotation = enclosingElement.hasAnnotation<Singleton>(),
             hasReleasableAnnotation = enclosingElement.hasAnnotation<Releasable>(),
             hasProvidesSingletonInScopeAnnotation = enclosingElement.hasAnnotation<ProvidesSingletonInScope>(),
             hasProvidesReleasableAnnotation = enclosingElement.hasAnnotation<ProvidesReleasable>(),
-            superClassThatNeedsMemberInjection = superClassWithInjectedMembers
+            superClassThatNeedsMemberInjection = superClassWithInjectedMembers,
+            parameters = getParamInjectionTargetList(),
+            throwsThrowable = thrownTypes.isNotEmpty()
         )
-
-        constructorInjectionTarget.parameters.addAll(getParamInjectionTargetList())
-        constructorInjectionTarget.throwsThrowable = thrownTypes.isNotEmpty()
-        return constructorInjectionTarget
     }
 
     private fun TypeElement.createConstructorInjectionTarget(): ConstructorInjectionTarget? {
@@ -444,7 +398,7 @@ class FactoryProcessor : ToothpickProcessor() {
         if (hasAnnotation<Releasable>() && !hasAnnotation<Singleton>()) {
             error(
                 this,
-                "Class %s is annotated with @Releasable, it should also be annotated with either @Singleton.",
+                "Class %s is annotated with @Releasable, it should also be annotated with @Singleton.",
                 qualifiedName
             )
         }
