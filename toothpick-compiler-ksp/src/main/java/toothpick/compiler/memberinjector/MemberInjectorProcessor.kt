@@ -30,7 +30,6 @@ import javax.annotation.processing.SupportedOptions
 import javax.inject.Inject
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
-import javax.lang.model.element.VariableElement
 
 /**
  * This processor's role is to create [MemberInjector]. We create factories in different
@@ -54,124 +53,57 @@ open class MemberInjectorProcessor : ToothpickProcessor() {
     private val allRoundsGeneratedToTypeElement = mutableMapOf<String, TypeElement>()
 
     override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
-        val typeElementToFieldInjectorTargetList = mutableMapOf<TypeElement, List<FieldInjectionTarget>>()
-        val typeElementToMethodInjectorTargetList = mutableMapOf<TypeElement, List<MethodInjectionTarget>>()
-        val typeElementToSuperTypeElementThatNeedsInjection = mutableMapOf<TypeElement, TypeElement?>()
+        val injectedElements = roundEnv.getElementsAnnotatedWith(Inject::class.java)
 
-        roundEnv.findAndParseTargets(
-            typeElementToFieldInjectorTargetList,
-            typeElementToMethodInjectorTargetList,
-            typeElementToSuperTypeElementThatNeedsInjection
-        )
+        val typeElementToFieldInjectorTargetList: Map<TypeElement, List<FieldInjectionTarget>> =
+            injectedElements.fields
+                .filterNot { field -> (field.enclosingElement as TypeElement).isExcludedByFilters() }
+                .filter { field -> field.isValidInjectAnnotatedFieldOrParameter() }
+                .groupBy { field -> field.enclosingElement as TypeElement }
+                .asSequence()
+                .associate { (enclosing, fields) ->
+                    enclosing to fields.map { field -> field.createFieldOrParamInjectionTarget() }
+                }
+
+        val typeElementToMethodInjectorTargetList: Map<TypeElement, List<MethodInjectionTarget>> =
+            injectedElements.methods
+                .filterNot { method -> (method.enclosingElement as TypeElement).isExcludedByFilters() }
+                .filter { method -> method.isValidInjectAnnotatedMethod() }
+                .groupBy { method -> method.enclosingElement as TypeElement }
+                .asSequence()
+                .associate { (enclosing, methods) ->
+                    enclosing to methods.map { method -> method.createMethodInjectionTarget() }
+                }
+
+        val elementWithInjectionSet: Set<TypeElement> =
+            typeElementToFieldInjectorTargetList.keys + typeElementToMethodInjectorTargetList.keys
+
+        val typeElementToSuperTypeElementThatNeedsInjection: Map<TypeElement, TypeElement?> =
+            elementWithInjectionSet.associateWith { enclosing ->
+                enclosing.getMostDirectSuperClassWithInjectedMembers(onlyParents = true)
+            }
 
         // Generate member scopes
-        val elementWithInjectionSet: Set<TypeElement> =
-            typeElementToFieldInjectorTargetList.keys +
-                typeElementToMethodInjectorTargetList.keys
+        elementWithInjectionSet
+            .map { typeElement ->
+                MemberInjectorGenerator(
+                    targetClass = typeElement,
+                    superClassThatNeedsInjection = typeElementToSuperTypeElementThatNeedsInjection[typeElement],
+                    fieldInjectionTargetList = typeElementToFieldInjectorTargetList[typeElement],
+                    methodInjectionTargetList = typeElementToMethodInjectorTargetList[typeElement],
+                    typeUtil = typeUtils
+                )
+            }
+            .forEach { memberInjectorGenerator ->
+                writeToFile(
+                    codeGenerator = memberInjectorGenerator,
+                    fileDescription = "MemberInjector for type ${memberInjectorGenerator.targetClass}"
+                )
 
-        elementWithInjectionSet.forEach { typeElement ->
-            val memberInjectorGenerator = MemberInjectorGenerator(
-                targetClass = typeElement,
-                superClassThatNeedsInjection = typeElementToSuperTypeElementThatNeedsInjection[typeElement],
-                fieldInjectionTargetList = typeElementToFieldInjectorTargetList[typeElement],
-                methodInjectionTargetList = typeElementToMethodInjectorTargetList[typeElement],
-                typeUtil = typeUtils
-            )
+                allRoundsGeneratedToTypeElement[memberInjectorGenerator.fqcn] = memberInjectorGenerator.targetClass
+            }
 
-            writeToFile(
-                codeGenerator = memberInjectorGenerator,
-                fileDescription = "MemberInjector for type %s".format(typeElement)
-            )
-
-            allRoundsGeneratedToTypeElement[memberInjectorGenerator.fqcn] = typeElement
-        }
         return false
-    }
-
-    private fun RoundEnvironment.findAndParseTargets(
-        typeElementToFieldInjectorTargetList: MutableMap<TypeElement, List<FieldInjectionTarget>>,
-        typeElementToMethodInjectorTargetList: MutableMap<TypeElement, List<MethodInjectionTarget>>,
-        typeElementToSuperTypeElementThatNeedsInjection: MutableMap<TypeElement, TypeElement?>
-    ) {
-        processInjectAnnotatedFields(
-            typeElementToFieldInjectorTargetList,
-            typeElementToSuperTypeElementThatNeedsInjection
-        )
-
-        processInjectAnnotatedMethods(
-            typeElementToMethodInjectorTargetList,
-            typeElementToSuperTypeElementThatNeedsInjection
-        )
-    }
-
-    private fun RoundEnvironment.processInjectAnnotatedFields(
-        typeElementToFieldInjectorTargetList: MutableMap<TypeElement, List<FieldInjectionTarget>>,
-        typeElementToSuperTypeElementThatNeedsInjection: MutableMap<TypeElement, TypeElement?>
-    ) {
-        getElementsAnnotatedWith(Inject::class.java)
-            .fields
-            .filterNot { (it.enclosingElement as TypeElement).isExcludedByFilters() }
-            .forEach { element ->
-                element.processInjectAnnotatedField(
-                    typeElementToFieldInjectorTargetList,
-                    typeElementToSuperTypeElementThatNeedsInjection
-                )
-            }
-    }
-
-    private fun RoundEnvironment.processInjectAnnotatedMethods(
-        typeElementToMethodInjectorTargetList: MutableMap<TypeElement, List<MethodInjectionTarget>>,
-        typeElementToSuperTypeElementThatNeedsInjection: MutableMap<TypeElement, TypeElement?>
-    ) {
-        getElementsAnnotatedWith(Inject::class.java)
-            .methods
-            .filterNot { (it.enclosingElement as TypeElement).isExcludedByFilters() }
-            .forEach { element ->
-                element.processInjectAnnotatedMethod(
-                    typeElementToMethodInjectorTargetList,
-                    typeElementToSuperTypeElementThatNeedsInjection
-                )
-            }
-    }
-
-    private fun VariableElement.processInjectAnnotatedField(
-        typeElementToMemberInjectorTargetList: MutableMap<TypeElement, List<FieldInjectionTarget>>,
-        typeElementToSuperTypeElementThatNeedsInjection: MutableMap<TypeElement, TypeElement?>
-    ) {
-        val enclosingElement = enclosingElement as TypeElement
-
-        // Verify common generated code restrictions.
-        if (!isValidInjectAnnotatedFieldOrParameter()) return
-
-        val fieldInjectionTargetList: List<FieldInjectionTarget> =
-            typeElementToMemberInjectorTargetList.getOrPut(enclosingElement) { emptyList() }
-
-        typeElementToSuperTypeElementThatNeedsInjection[enclosingElement] =
-            enclosingElement.getMostDirectSuperClassWithInjectedMembers(onlyParents = true)
-
-        typeElementToMemberInjectorTargetList[enclosingElement] =
-            fieldInjectionTargetList + createFieldOrParamInjectionTarget()
-    }
-
-    private fun ExecutableElement.processInjectAnnotatedMethod(
-        typeElementToMemberInjectorTargetList: MutableMap<TypeElement, List<MethodInjectionTarget>>,
-        typeElementToSuperTypeElementThatNeedsInjection: MutableMap<TypeElement, TypeElement?>
-    ) {
-        val enclosingElement = enclosingElement as TypeElement
-
-        // Verify common generated code restrictions.
-        if (!isValidInjectAnnotatedMethod()) {
-            return
-        }
-
-        val methodInjectionTargetList: List<MethodInjectionTarget> =
-            typeElementToMemberInjectorTargetList.getOrPut(enclosingElement) { emptyList() }
-
-        typeElementToSuperTypeElementThatNeedsInjection[enclosingElement] =
-            enclosingElement.getMostDirectSuperClassWithInjectedMembers(onlyParents = true)
-
-        typeElementToMemberInjectorTargetList[enclosingElement] =
-            methodInjectionTargetList + createMethodInjectionTarget()
     }
 
     private fun ExecutableElement.createMethodInjectionTarget(): MethodInjectionTarget {
@@ -179,7 +111,7 @@ open class MemberInjectorProcessor : ToothpickProcessor() {
         return MethodInjectionTarget(
             enclosingClass = enclosingElement,
             methodName = simpleName.toString(),
-            isOverride = enclosingElement.isOverride(this),
+            isOverride = enclosingElement.isOverride(methodElement = this),
             parameters = getParamInjectionTargetList(),
             exceptionTypes = getExceptionTypes()
         )
@@ -194,7 +126,6 @@ open class MemberInjectorProcessor : ToothpickProcessor() {
     }
 
     @TestOnly
-    internal fun getOriginatingElement(generatedQualifiedName: String): TypeElement? {
-        return allRoundsGeneratedToTypeElement[generatedQualifiedName]
-    }
+    internal fun getOriginatingElement(generatedQualifiedName: String): TypeElement? =
+        allRoundsGeneratedToTypeElement[generatedQualifiedName]
 }

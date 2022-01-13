@@ -31,7 +31,7 @@ import javax.lang.model.util.Types
  * Typically a [MemberInjector] is created for a class a soon as it contains an [ ] annotated field or method.
  */
 class MemberInjectorGenerator(
-    private val targetClass: TypeElement,
+    val targetClass: TypeElement,
     private val superClassThatNeedsInjection: TypeElement?,
     private val fieldInjectionTargetList: List<FieldInjectionTarget>?,
     private val methodInjectionTargetList: List<MethodInjectionTarget>?,
