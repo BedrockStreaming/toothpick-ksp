@@ -71,8 +71,6 @@ import javax.lang.model.element.*
 )
 class FactoryProcessor : ToothpickProcessor() {
 
-    private val allRoundsGeneratedToTypeElement = mutableMapOf<String, TypeElement>()
-
     override fun getSupportedAnnotationTypes(): Set<String> = options.annotationTypes
 
     override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
@@ -458,10 +456,11 @@ class FactoryProcessor : ToothpickProcessor() {
         )
     }
 
+    private val allRoundsGeneratedToTypeElement = mutableMapOf<String, TypeElement>()
+
     @TestOnly
-    internal fun getOriginatingElement(generatedQualifiedName: String): TypeElement? {
-        return allRoundsGeneratedToTypeElement[generatedQualifiedName]
-    }
+    internal fun getOriginatingElement(generatedQualifiedName: String): TypeElement? =
+        allRoundsGeneratedToTypeElement[generatedQualifiedName]
 
     companion object {
         private const val SUPPRESS_WARNING_ANNOTATION_INJECTABLE_VALUE = "injectable"
