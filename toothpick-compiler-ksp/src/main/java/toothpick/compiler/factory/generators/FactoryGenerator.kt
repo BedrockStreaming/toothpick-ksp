@@ -24,6 +24,7 @@ import toothpick.Scope
 import toothpick.compiler.common.generators.*
 import toothpick.compiler.factory.targets.ConstructorInjectionTarget
 import javax.inject.Singleton
+import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Types
 
 /**
@@ -36,18 +37,23 @@ open class FactoryGenerator(
     private val typeUtil: Types
 ) : CodeGenerator {
 
+    private val targetClass: TypeElement = constructorInjectionTarget.builtClass
+    private val targetFactoryClassName: ClassName = targetClass.asClassName().factoryClassName
+    override val fqcn: String = targetFactoryClassName.toString()
+
     override fun brewCode(): FileSpec {
-        // Interface to implement
-        val className = constructorInjectionTarget.builtClass.asClassName()
-        val simpleClassName = constructorInjectionTarget.builtClass.generatedSimpleClassName
+        val className = targetClass.asClassName()
 
         // Build class
         return FileSpec.get(
             packageName = className.packageName,
-            TypeSpec.classBuilder(simpleClassName + FACTORY_SUFFIX)
+            TypeSpec.classBuilder(targetFactoryClassName)
                 .addModifiers(KModifier.PUBLIC, KModifier.FINAL)
                 .addSuperinterface(
-                    Factory::class.asClassName().parameterizedBy(className)
+                    // Interface to implement
+                    Factory::class.asClassName().parameterizedBy(
+                        targetClass.asClassName()
+                    )
                 )
                 .emitSuperMemberInjectorFieldIfNeeded()
                 .emitCreateInstance()
@@ -74,19 +80,18 @@ open class FactoryGenerator(
             PropertySpec
                 .builder("memberInjector", memberInjectorSuper, KModifier.PRIVATE)
                 .initializer(
-                    "%L__MemberInjector()",
+                    "%T()",
                     constructorInjectionTarget
                         .superClassThatNeedsMemberInjection
-                        .generatedFQNClassName
+                        .asClassName()
+                        .memberInjectorClassName
                 )
                 .build()
         )
     }
 
-    override val fqcn: String = constructorInjectionTarget.builtClass.generatedFQNClassName + FACTORY_SUFFIX
-
     private fun TypeSpec.Builder.emitCreateInstance(): TypeSpec.Builder = apply {
-        val className = constructorInjectionTarget.builtClass.asClassName()
+        val className = targetClass.asClassName()
         val createInstanceBuilder =
             FunSpec.builder("createInstance")
                 .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
@@ -236,8 +241,4 @@ open class FactoryGenerator(
             Singleton::class.java.name -> CodeBlock.of(".getRootScope()")
             else -> CodeBlock.of(".getParentScope(%L::class.java)", scopeName)
         }
-
-    companion object {
-        private const val FACTORY_SUFFIX = "__Factory"
-    }
 }

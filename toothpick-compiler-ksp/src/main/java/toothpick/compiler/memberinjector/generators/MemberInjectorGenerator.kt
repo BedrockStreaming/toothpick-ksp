@@ -39,10 +39,13 @@ class MemberInjectorGenerator(
 ) : CodeGenerator {
 
     init {
-        require(!(fieldInjectionTargetList == null && methodInjectionTargetList == null)) {
+        require(fieldInjectionTargetList != null || methodInjectionTargetList != null) {
             "At least one memberInjectorInjectionTarget is needed."
         }
     }
+
+    private val targetMemberInjectorClassName: ClassName = targetClass.asClassName().memberInjectorClassName
+    override val fqcn: String = targetMemberInjectorClassName.toString()
 
     override fun brewCode(): FileSpec {
         // Interface to implement
@@ -51,7 +54,7 @@ class MemberInjectorGenerator(
         // Build class
         return FileSpec.get(
             packageName = className.packageName,
-            TypeSpec.classBuilder(targetClass.generatedSimpleClassName + MEMBER_INJECTOR_SUFFIX)
+            TypeSpec.classBuilder(targetMemberInjectorClassName)
                 .addModifiers(KModifier.PUBLIC, KModifier.FINAL)
                 .addSuperinterface(
                     MemberInjector::class.asClassName().parameterizedBy(className)
@@ -77,10 +80,7 @@ class MemberInjectorGenerator(
                     ),
                 KModifier.PRIVATE
             )
-                .initializer(
-                    "%L__MemberInjector()",
-                    superClassThatNeedsInjection.generatedFQNClassName
-                )
+                .initializer("%T()", targetMemberInjectorClassName)
                 .build()
         )
     }
@@ -157,11 +157,5 @@ class MemberInjectorGenerator(
                 memberInjectionTarget.getInvokeScopeGetMethodWithNameCodeBlock()
             )
         }
-    }
-
-    override val fqcn: String = targetClass.generatedFQNClassName + MEMBER_INJECTOR_SUFFIX
-
-    companion object {
-        private const val MEMBER_INJECTOR_SUFFIX = "__MemberInjector"
     }
 }
