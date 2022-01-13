@@ -136,7 +136,7 @@ class MemberInjectorGenerator(
 
                 if (isMethodThrowingExceptions) {
                     methodInjectionTarget.exceptionTypes.forEachIndexed { exceptionCounter, exceptionType ->
-                        nextControlFlow("catch (e%L: %T)", exceptionType, exceptionCounter)
+                        nextControlFlow("catch (e%L: %T)", exceptionCounter, exceptionType)
                         addStatement(
                             "throw %T(e%L)", RuntimeException::class, exceptionCounter
                         )
