@@ -119,6 +119,7 @@ open class FactoryGenerator(
                         "val %L: %T = scope.%L",
                         "param${i + 1}",
                         param.getParamType(typeUtil),
+                        param.getInvokeScopeGetMethodWithNameCodeBlock()
                     )
                 }
 

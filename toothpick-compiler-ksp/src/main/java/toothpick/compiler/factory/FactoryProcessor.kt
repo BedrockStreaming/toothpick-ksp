@@ -20,8 +20,7 @@ import org.jetbrains.annotations.TestOnly
 import toothpick.*
 import toothpick.compiler.common.ToothpickProcessor
 import toothpick.compiler.common.ToothpickProcessorOptions
-import toothpick.compiler.common.generators.asElement
-import toothpick.compiler.common.generators.hasAnnotation
+import toothpick.compiler.common.generators.*
 import toothpick.compiler.factory.generators.FactoryGenerator
 import toothpick.compiler.factory.targets.ConstructorInjectionTarget
 import java.lang.annotation.Retention
@@ -32,7 +31,6 @@ import javax.inject.Inject
 import javax.inject.Scope
 import javax.inject.Singleton
 import javax.lang.model.element.*
-import javax.lang.model.util.ElementFilter
 
 /**
  * This processor's role is to create [Factory]. We create factories in different situations :
@@ -123,7 +121,8 @@ class FactoryProcessor : ToothpickProcessor() {
         roundEnv: RoundEnvironment,
         mapTypeElementToConstructorInjectionTarget: MutableMap<TypeElement, ConstructorInjectionTarget>
     ) {
-        ElementFilter.methodsIn(roundEnv.getElementsAnnotatedWith(Inject::class.java))
+        roundEnv.getElementsAnnotatedWith(Inject::class.java)
+            .methods
             .forEach { methodElement ->
                 methodElement.enclosingElement.processClassContainingInjectAnnotatedMember(
                     mapTypeElementToConstructorInjectionTarget = mapTypeElementToConstructorInjectionTarget
@@ -135,7 +134,8 @@ class FactoryProcessor : ToothpickProcessor() {
         roundEnv: RoundEnvironment,
         mapTypeElementToConstructorInjectionTarget: MutableMap<TypeElement, ConstructorInjectionTarget>
     ) {
-        ElementFilter.fieldsIn(roundEnv.getElementsAnnotatedWith(Inject::class.java))
+        roundEnv.getElementsAnnotatedWith(Inject::class.java)
+            .fields
             .forEach { fieldElement ->
                 fieldElement.enclosingElement.processClassContainingInjectAnnotatedMember(
                     mapTypeElementToConstructorInjectionTarget = mapTypeElementToConstructorInjectionTarget
@@ -148,8 +148,8 @@ class FactoryProcessor : ToothpickProcessor() {
         annotationClass: Class<out Annotation?>,
         mapTypeElementToConstructorInjectionTarget: MutableMap<TypeElement, ConstructorInjectionTarget>
     ) {
-        ElementFilter.typesIn(roundEnv.getElementsAnnotatedWith(annotationClass))
-            .map { it as TypeElement }
+        roundEnv.getElementsAnnotatedWith(annotationClass)
+            .types
             .forEach { annotatedElement ->
                 annotatedElement.processClassContainingInjectAnnotatedMember(
                     mapTypeElementToConstructorInjectionTarget = mapTypeElementToConstructorInjectionTarget
@@ -162,8 +162,8 @@ class FactoryProcessor : ToothpickProcessor() {
         annotationType: TypeElement,
         mapTypeElementToConstructorInjectionTarget: MutableMap<TypeElement, ConstructorInjectionTarget>
     ) {
-        ElementFilter.typesIn(roundEnv.getElementsAnnotatedWith(annotationType))
-            .map { it as TypeElement }
+        roundEnv.getElementsAnnotatedWith(annotationType)
+            .types
             .forEach {
                 it.processClassContainingInjectAnnotatedMember(
                     mapTypeElementToConstructorInjectionTarget = mapTypeElementToConstructorInjectionTarget
@@ -175,30 +175,32 @@ class FactoryProcessor : ToothpickProcessor() {
         roundEnv: RoundEnvironment,
         mapTypeElementToConstructorInjectionTarget: MutableMap<TypeElement, ConstructorInjectionTarget>
     ) {
-        for (constructorElement in ElementFilter.constructorsIn(roundEnv.getElementsAnnotatedWith(Inject::class.java))) {
-            val enclosingElement = constructorElement.enclosingElement as TypeElement
-            if (!constructorElement.isSingleInjectAnnotatedConstructor()) {
-                error(
-                    constructorElement,
-                    "Class %s cannot have more than one @Inject annotated constructor.",
-                    enclosingElement.qualifiedName
+        roundEnv.getElementsAnnotatedWith(Inject::class.java)
+            .constructors
+            .forEach { constructorElement ->
+                val enclosingElement = constructorElement.enclosingElement as TypeElement
+                if (!constructorElement.isSingleInjectAnnotatedConstructor()) {
+                    error(
+                        constructorElement,
+                        "Class %s cannot have more than one @Inject annotated constructor.",
+                        enclosingElement.qualifiedName
+                    )
+                }
+
+                constructorElement.processInjectAnnotatedConstructor(
+                    targetClassMap = mapTypeElementToConstructorInjectionTarget
                 )
             }
-
-            constructorElement.processInjectAnnotatedConstructor(
-                targetClassMap = mapTypeElementToConstructorInjectionTarget
-            )
-        }
     }
 
     private fun createFactoriesForClassesAnnotatedWithInjectConstructor(
         roundEnv: RoundEnvironment,
         mapTypeElementToConstructorInjectionTarget: MutableMap<TypeElement, ConstructorInjectionTarget>
     ) {
-        ElementFilter.typesIn(roundEnv.getElementsAnnotatedWith(InjectConstructor::class.java))
-            .map { annotatedElement -> annotatedElement as TypeElement }
+        roundEnv.getElementsAnnotatedWith(InjectConstructor::class.java)
+            .types
             .forEach { annotatedTypeElement ->
-                val constructorElements = ElementFilter.constructorsIn(annotatedTypeElement.enclosedElements)
+                val constructorElements = annotatedTypeElement.enclosedElements.constructors
                 val firstConstructor = constructorElements.firstOrNull()
 
                 if (constructorElements.size == 1
@@ -236,15 +238,10 @@ class FactoryProcessor : ToothpickProcessor() {
     }
 
     private fun Element.isSingleInjectAnnotatedConstructor(): Boolean {
-        val enclosingElement = enclosingElement as TypeElement
-        val isSingleInjectedConstructor =
-            ElementFilter
-                .constructorsIn(enclosingElement.enclosedElements)
-                .none { element ->
-                    element.hasAnnotation<Inject>() && this != element
-                }
-
-        return isSingleInjectedConstructor
+        return enclosingElement
+            .enclosedElements
+            .constructors
+            .all { element -> element == this || !element.hasAnnotation<Inject>() }
     }
 
     private fun ExecutableElement.processInjectAnnotatedConstructor(
@@ -344,7 +341,7 @@ class FactoryProcessor : ToothpickProcessor() {
         }
 
         val superClassWithInjectedMembers = getMostDirectSuperClassWithInjectedMembers(onlyParents = false)
-        val constructorElements = ElementFilter.constructorsIn(enclosedElements)
+        val constructorElements = enclosedElements.constructors
 
         // we just need to deal with the case of the default constructor only.
         // like Guice, we will call it by default in the optimistic factory
@@ -464,7 +461,7 @@ class FactoryProcessor : ToothpickProcessor() {
     }
 
     private fun checkScopeAnnotationValidity(annotation: TypeElement) {
-        if (annotation.hasAnnotation<Scope>()) {
+        if (!annotation.hasAnnotation<Scope>()) {
             error(
                 annotation,
                 "Scope Annotation %s does not contain Scope annotation.",
