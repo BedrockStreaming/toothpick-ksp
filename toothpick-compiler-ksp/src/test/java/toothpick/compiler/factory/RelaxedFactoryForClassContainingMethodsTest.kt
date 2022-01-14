@@ -35,17 +35,20 @@ class RelaxedFactoryForClassContainingMethodsTest {
             class Foo {}
            """
         )
+
         val expectedSource = expectedKtSource(
             "TestRelaxedFactoryCreationForInjectMethod__Factory",
             """
             package test
             
             import kotlin.Boolean
+            import kotlin.Suppress
             import toothpick.Factory
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestRelaxedFactoryCreationForInjectMethod__Factory :
+            @Suppress("ClassName")
+            internal class TestRelaxedFactoryCreationForInjectMethod__Factory :
                 Factory<TestRelaxedFactoryCreationForInjectMethod> {
               private val memberInjector: MemberInjector<TestRelaxedFactoryCreationForInjectMethod> =
                   TestRelaxedFactoryCreationForInjectMethod__MemberInjector()

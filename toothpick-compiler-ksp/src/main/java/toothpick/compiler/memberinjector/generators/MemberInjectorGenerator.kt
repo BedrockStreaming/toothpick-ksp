@@ -55,9 +55,14 @@ class MemberInjectorGenerator(
         return FileSpec.get(
             packageName = className.packageName,
             TypeSpec.classBuilder(targetMemberInjectorClassName)
-                .addModifiers(KModifier.PUBLIC, KModifier.FINAL)
+                .addModifiers(KModifier.INTERNAL)
                 .addSuperinterface(
                     MemberInjector::class.asClassName().parameterizedBy(className)
+                )
+                .addAnnotation(
+                    AnnotationSpec.builder(Suppress::class)
+                        .addMember("%S", "ClassName")
+                        .build()
                 )
                 .emitSuperMemberInjectorFieldIfNeeded()
                 .emitInjectMethod(fieldInjectionTargetList, methodInjectionTargetList)
@@ -80,7 +85,7 @@ class MemberInjectorGenerator(
                     ),
                 KModifier.PRIVATE
             )
-                .initializer("%T()", targetMemberInjectorClassName)
+                .initializer("%T()", superClassThatNeedsInjection.asClassName())
                 .build()
         )
     }
@@ -91,7 +96,7 @@ class MemberInjectorGenerator(
     ): TypeSpec.Builder = apply {
         addFunction(
             FunSpec.builder("inject")
-                .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+                .addModifiers(KModifier.OVERRIDE)
                 .addParameter("target", targetClass.asClassName())
                 .addParameter("scope", Scope::class)
                 .apply {
@@ -114,7 +119,7 @@ class MemberInjectorGenerator(
                 methodInjectionTarget.parameters
                     .forEachIndexed { paramIndex, paramInjectionTarget ->
                         addStatement(
-                            "val %L: %T = scope.%L",
+                            "val %N: %T = scope.%L",
                             "param${paramIndex + 1}",
                             paramInjectionTarget.getParamType(typeUtil),
                             paramInjectionTarget.getInvokeScopeGetMethodWithNameCodeBlock()
@@ -128,7 +133,7 @@ class MemberInjectorGenerator(
                 }
 
                 addStatement(
-                    "target.%L(%L)",
+                    "target.%N(%L)",
                     methodInjectionTarget.methodName,
                     List(methodInjectionTarget.parameters.size) { paramIndex -> "param${paramIndex + 1}" }
                         .joinToString(", ")
@@ -136,9 +141,17 @@ class MemberInjectorGenerator(
 
                 if (isMethodThrowingExceptions) {
                     methodInjectionTarget.exceptionTypes.forEachIndexed { exceptionCounter, exceptionType ->
-                        nextControlFlow("catch (e%L: %T)", exceptionCounter, exceptionType)
+                        val exceptionName = "e${exceptionCounter + 1}"
+                        nextControlFlow(
+                            "catch (%N: %T)",
+                            exceptionName,
+                            exceptionType
+                        )
+
                         addStatement(
-                            "throw %T(e%L)", RuntimeException::class, exceptionCounter
+                            "throw %T(%N)",
+                            RuntimeException::class,
+                            exceptionName
                         )
                     }
 
@@ -152,7 +165,7 @@ class MemberInjectorGenerator(
     ): FunSpec.Builder = apply {
         fieldInjectionTargetList?.forEach { memberInjectionTarget ->
             addStatement(
-                "target.%L = scope.%L",
+                "target.%N = scope.%L",
                 memberInjectionTarget.memberName,
                 memberInjectionTarget.getInvokeScopeGetMethodWithNameCodeBlock()
             )

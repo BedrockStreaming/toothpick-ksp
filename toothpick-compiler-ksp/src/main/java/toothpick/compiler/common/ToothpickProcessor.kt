@@ -414,7 +414,7 @@ abstract class ToothpickProcessor : AbstractProcessor() {
             .firstOrNull { (key, _) -> key.simpleName.contentEquals("value") }
             ?.second
             ?.toString()
-            ?.replace("\"".toRegex(), "")
+            ?.replace("\"", "")
     }
 
     private fun Element.isProviderOrLazy(): Boolean {

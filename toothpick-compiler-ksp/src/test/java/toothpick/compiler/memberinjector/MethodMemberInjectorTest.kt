@@ -42,11 +42,13 @@ class MethodMemberInjectorTest {
             """
             package test
             
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
+            @Suppress("ClassName")
+            internal class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
               public override fun inject(target: TestMethodInjection, scope: Scope): Unit {
                 val param1: Foo = scope.getInstance(Foo::class.java)
                 target.m(param1)
@@ -83,12 +85,14 @@ class MethodMemberInjectorTest {
             """
             package test
             
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.Lazy
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
+            @Suppress("ClassName")
+            internal class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
               public override fun inject(target: TestMethodInjection, scope: Scope): Unit {
                 val param1: Lazy<Foo> = scope.getLazy(Foo::class.java)
                 target.m(param1)
@@ -126,11 +130,13 @@ class MethodMemberInjectorTest {
             package test
             
             import javax.inject.Provider
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
+            @Suppress("ClassName")
+            internal class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
               public override fun inject(target: TestMethodInjection, scope: Scope): Unit {
                 val param1: Provider<Foo> = scope.getProvider(Foo::class.java)
                 target.m(param1)
@@ -342,7 +348,7 @@ class MethodMemberInjectorTest {
             import toothpick.MemberInjector;
             import toothpick.Scope;
 
-            public final class TestMethodInjectionParent${'$'}TestMethodInjection__MemberInjector implements MemberInjector<TestMethodInjectionParent.TestMethodInjection> {
+            public class TestMethodInjectionParent${'$'}TestMethodInjection__MemberInjector implements MemberInjector<TestMethodInjectionParent.TestMethodInjection> {
               private MemberInjector<TestMethodInjectionParent> superMemberInjector = new test.TestMethodInjectionParent__MemberInjector();
             
               @Override
@@ -382,17 +388,19 @@ class MethodMemberInjectorTest {
             
             import java.lang.Exception
             import java.lang.RuntimeException
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
+            @Suppress("ClassName")
+            internal class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
               public override fun inject(target: TestMethodInjection, scope: Scope): Unit {
                 val param1: Foo = scope.getInstance(Foo::class.java)
                 try {
                   target.m(param1)
-                } catch (e0: Exception) {
-                  throw RuntimeException(e0)
+                } catch (e1: Exception) {
+                  throw RuntimeException(e1)
                 }
               }
             }

@@ -48,12 +48,17 @@ open class FactoryGenerator(
         return FileSpec.get(
             packageName = className.packageName,
             TypeSpec.classBuilder(targetFactoryClassName)
-                .addModifiers(KModifier.PUBLIC, KModifier.FINAL)
+                .addModifiers(KModifier.INTERNAL)
                 .addSuperinterface(
                     // Interface to implement
                     Factory::class.asClassName().parameterizedBy(
                         targetClass.asClassName()
                     )
+                )
+                .addAnnotation(
+                    AnnotationSpec.builder(Suppress::class)
+                        .addMember("%S", "ClassName")
+                        .build()
                 )
                 .emitSuperMemberInjectorFieldIfNeeded()
                 .emitCreateInstance()
@@ -94,7 +99,7 @@ open class FactoryGenerator(
         val className = targetClass.asClassName()
         val createInstanceBuilder =
             FunSpec.builder("createInstance")
-                .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+                .addModifiers(KModifier.OVERRIDE)
                 .addParameter("scope", Scope::class)
                 .returns(className)
                 .apply {
@@ -121,7 +126,7 @@ open class FactoryGenerator(
 
                 constructorInjectionTarget.parameters.forEachIndexed { i, param ->
                     addStatement(
-                        "val %L: %T = scope.%L",
+                        "val %N: %T = scope.%L",
                         "param${i + 1}",
                         param.getParamType(typeUtil),
                         param.getInvokeScopeGetMethodWithNameCodeBlock()
@@ -129,7 +134,7 @@ open class FactoryGenerator(
                 }
 
                 addStatement(
-                    "val %L: %T = %T(%L)",
+                    "val %N: %T = %T(%L)",
                     varName,
                     className,
                     className,
@@ -138,10 +143,10 @@ open class FactoryGenerator(
                 )
 
                 if (constructorInjectionTarget.superClassThatNeedsMemberInjection != null) {
-                    addStatement("memberInjector.inject(%L, scope)", varName)
+                    addStatement("memberInjector.inject(%N, scope)", varName)
                 }
 
-                addStatement("return %L", varName)
+                addStatement("return %N", varName)
 
                 if (throwsThrowable) {
                     nextControlFlow("catch(ex: %T)", Throwable::class.asClassName())
@@ -158,7 +163,7 @@ open class FactoryGenerator(
     private fun TypeSpec.Builder.emitGetTargetScope(): TypeSpec.Builder = apply {
         addFunction(
             FunSpec.builder("getTargetScope")
-                .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+                .addModifiers(KModifier.OVERRIDE)
                 .addParameter("scope", Scope::class)
                 .returns(Scope::class)
                 .addStatement(
@@ -174,7 +179,7 @@ open class FactoryGenerator(
         val hasScopeAnnotation = scopeName != null
         addFunction(
             FunSpec.builder("hasScopeAnnotation")
-                .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+                .addModifiers(KModifier.OVERRIDE)
                 .returns(Boolean::class)
                 .addStatement("return %L", hasScopeAnnotation)
                 .build()
@@ -184,7 +189,7 @@ open class FactoryGenerator(
     private fun TypeSpec.Builder.emitHasSingletonAnnotation(): TypeSpec.Builder = apply {
         addFunction(
             FunSpec.builder("hasSingletonAnnotation")
-                .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+                .addModifiers(KModifier.OVERRIDE)
                 .returns(Boolean::class)
                 .addStatement(
                     "return %L",
@@ -197,7 +202,7 @@ open class FactoryGenerator(
     private fun TypeSpec.Builder.emitHasReleasableAnnotation(): TypeSpec.Builder {
         addFunction(
             FunSpec.builder("hasReleasableAnnotation")
-                .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+                .addModifiers(KModifier.OVERRIDE)
                 .returns(Boolean::class)
                 .addStatement(
                     "return %L",
@@ -211,7 +216,7 @@ open class FactoryGenerator(
     private fun TypeSpec.Builder.emitHasProvidesSingletonAnnotation(): TypeSpec.Builder = apply {
         addFunction(
             FunSpec.builder("hasProvidesSingletonAnnotation")
-                .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+                .addModifiers(KModifier.OVERRIDE)
                 .returns(Boolean::class)
                 .addStatement(
                     "return %L",
@@ -224,7 +229,7 @@ open class FactoryGenerator(
     private fun TypeSpec.Builder.emitHasProvidesReleasableAnnotation(): TypeSpec.Builder = apply {
         addFunction(
             FunSpec.builder("hasProvidesReleasableAnnotation")
-                .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
+                .addModifiers(KModifier.OVERRIDE)
                 .returns(Boolean::class)
                 .addStatement(
                     "return %L",

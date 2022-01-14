@@ -24,7 +24,7 @@ internal fun ParamInjectionTarget.getInvokeScopeGetMethodWithNameCodeBlock(): Co
     }
 
     return CodeBlock.builder()
-        .add("%L(%T::class.java%L)", scopeGetMethodName, className, injectionName)
+        .add("%N(%T::class.java%L)", scopeGetMethodName, className, injectionName)
         .build()
 }
 

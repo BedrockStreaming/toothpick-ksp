@@ -42,11 +42,13 @@ class FieldMemberInjectorTest {
             """
             package test
             
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
+            @Suppress("ClassName")
+            internal class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
               public override fun inject(target: TestFieldInjection, scope: Scope): Unit {
                 target.foo = scope.getInstance(Foo::class.java)
               }
@@ -82,11 +84,13 @@ class FieldMemberInjectorTest {
             """
             package test
             
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
+            @Suppress("ClassName")
+            internal class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
               public override fun inject(target: TestFieldInjection, scope: Scope): Unit {
                 target.foo = scope.getInstance(Foo::class.java, "bar")
               }
@@ -125,11 +129,13 @@ class FieldMemberInjectorTest {
             """
             package test
             
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
+            @Suppress("ClassName")
+            internal class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
               public override fun inject(target: TestFieldInjection, scope: Scope): Unit {
                 target.foo = scope.getInstance(Foo::class.java, "test.Bar")
               }
@@ -166,11 +172,13 @@ class FieldMemberInjectorTest {
             """
             package test
             
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
+            @Suppress("ClassName")
+            internal class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
               public override fun inject(target: TestFieldInjection, scope: Scope): Unit {
                 target.foo = scope.getInstance(Foo::class.java)
               }
@@ -210,11 +218,13 @@ class FieldMemberInjectorTest {
             """
             package test
             
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
+            @Suppress("ClassName")
+            internal class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
               public override fun inject(target: TestFieldInjection, scope: Scope): Unit {
                 target.foo = scope.getProvider(Foo::class.java, "test.Bar")
               }
@@ -252,11 +262,13 @@ class FieldMemberInjectorTest {
             """
             package test
             
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
+            @Suppress("ClassName")
+            internal class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
               public override fun inject(target: TestFieldInjection, scope: Scope): Unit {
                 target.foo = scope.getProvider(Foo::class.java)
               }
@@ -296,11 +308,13 @@ class FieldMemberInjectorTest {
             """
             package test
             
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
+            @Suppress("ClassName")
+            internal class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
               public override fun inject(target: TestFieldInjection, scope: Scope): Unit {
                 target.foo = scope.getInstance(Foo::class.java, "test.Bar")
               }
@@ -366,11 +380,13 @@ class FieldMemberInjectorTest {
             """
             package test
             
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
+            @Suppress("ClassName")
+            internal class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
               public override fun inject(target: TestFieldInjection, scope: Scope): Unit {
                 target.foo = scope.getProvider(Foo::class.java)
               }
@@ -406,11 +422,13 @@ class FieldMemberInjectorTest {
             """
             package test
             
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
+            @Suppress("ClassName")
+            internal class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
               public override fun inject(target: TestFieldInjection, scope: Scope): Unit {
                 target.foo = scope.getLazy(Foo::class.java)
               }
@@ -446,11 +464,13 @@ class FieldMemberInjectorTest {
             """
             package test
             
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
+            @Suppress("ClassName")
+            internal class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
               public override fun inject(target: TestFieldInjection, scope: Scope): Unit {
                 target.foo = scope.getLazy(Foo::class.java)
               }
@@ -486,11 +506,13 @@ class FieldMemberInjectorTest {
             """
             package test
             
+            import kotlin.Suppress
             import kotlin.Unit
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
+            @Suppress("ClassName")
+            internal class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
               public override fun inject(target: TestFieldInjection, scope: Scope): Unit {
                 target.foo = scope.getInstance(Foo::class.java)
                 target.foo2 = scope.getInstance(Foo::class.java)

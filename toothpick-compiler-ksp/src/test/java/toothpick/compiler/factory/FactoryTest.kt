@@ -43,10 +43,12 @@ class FactoryTest {
             package test
             
             import kotlin.Boolean
+            import kotlin.Suppress
             import toothpick.Factory
             import toothpick.Scope
             
-            public final class TestEmptyConstructor__Factory : Factory<TestEmptyConstructor> {
+            @Suppress("ClassName")
+            internal class TestEmptyConstructor__Factory : Factory<TestEmptyConstructor> {
               public override fun createInstance(scope: Scope): TestEmptyConstructor {
                 val testEmptyConstructor: TestEmptyConstructor = TestEmptyConstructor()
                 return testEmptyConstructor
@@ -93,10 +95,12 @@ class FactoryTest {
             package test
             
             import kotlin.Boolean
+            import kotlin.Suppress
             import toothpick.Factory
             import toothpick.Scope
             
-            public final class TestEmptyConstructor__Factory : Factory<TestEmptyConstructor> {
+            @Suppress("ClassName")
+            internal class TestEmptyConstructor__Factory : Factory<TestEmptyConstructor> {
               public override fun createInstance(scope: Scope): TestEmptyConstructor {
                 val testEmptyConstructor: TestEmptyConstructor = TestEmptyConstructor()
                 return testEmptyConstructor
@@ -143,10 +147,12 @@ class FactoryTest {
             package test
             
             import kotlin.Boolean
+            import kotlin.Suppress
             import toothpick.Factory
             import toothpick.Scope
             
-            public final class TestEmptyConstructor__Factory : Factory<TestEmptyConstructor> {
+            @Suppress("ClassName")
+            internal class TestEmptyConstructor__Factory : Factory<TestEmptyConstructor> {
               public override fun createInstance(scope: Scope): TestEmptyConstructor {
                 val testEmptyConstructor: TestEmptyConstructor = TestEmptyConstructor()
                 return testEmptyConstructor
@@ -307,48 +313,32 @@ class FactoryTest {
         val expectedSource = expectedKtSource(
             "TestConstructorInPackageClass__Factory",
             """
-            package test;
+            package test
             
-            import java.lang.Override;
-            import toothpick.Factory;
-            import toothpick.Scope;
+            import kotlin.Boolean
+            import kotlin.Suppress
+            import toothpick.Factory
+            import toothpick.Scope
             
-            public final class TestConstructorInPackageClass__Factory implements Factory<TestConstructorInPackageClass> {
-              @Override
-              public TestConstructorInPackageClass createInstance(Scope scope) {
-                TestConstructorInPackageClass testConstructorInPackageClass = new TestConstructorInPackageClass();
-                return testConstructorInPackageClass;
+            @Suppress("ClassName")
+            internal class TestConstructorInPackageClass__Factory : Factory<TestConstructorInPackageClass> {
+              public override fun createInstance(scope: Scope): TestConstructorInPackageClass {
+                val testConstructorInPackageClass: TestConstructorInPackageClass =
+                    TestConstructorInPackageClass()
+                return testConstructorInPackageClass
               }
             
-              @Override
-              public Scope getTargetScope(Scope scope) {
-                return scope;
-              }
+              public override fun getTargetScope(scope: Scope): Scope = scope
             
-              @Override
-              public boolean hasScopeAnnotation() {
-                return false;
-              }
+              public override fun hasScopeAnnotation(): Boolean = false
             
-              @Override
-              public boolean hasSingletonAnnotation() {
-                return false;
-              }
+              public override fun hasSingletonAnnotation(): Boolean = false
             
-              @Override
-              public boolean hasReleasableAnnotation() {
-                return false;
-              }
+              public override fun hasReleasableAnnotation(): Boolean = false
             
-              @Override
-              public boolean hasProvidesSingletonAnnotation() {
-                return false;
-              }
+              public override fun hasProvidesSingletonAnnotation(): Boolean = false
             
-              @Override
-              public boolean hasProvidesReleasableAnnotation() {
-                return false;
-              }
+              public override fun hasProvidesReleasableAnnotation(): Boolean = false
             }
             """
         )
@@ -403,10 +393,12 @@ class FactoryTest {
             package test
             
             import kotlin.Boolean
+            import kotlin.Suppress
             import toothpick.Factory
             import toothpick.Scope
             
-            public final class Test2Constructors__Factory : Factory<Test2Constructors> {
+            @Suppress("ClassName")
+            internal class Test2Constructors__Factory : Factory<Test2Constructors> {
               public override fun createInstance(scope: Scope): Test2Constructors {
                 val test2Constructors: Test2Constructors = Test2Constructors()
                 return test2Constructors
@@ -1326,10 +1318,12 @@ class FactoryTest {
             package test
             
             import kotlin.Boolean
+            import kotlin.Suppress
             import toothpick.Factory
             import toothpick.Scope
             
-            public final class TestEmptyConstructor__Factory : Factory<TestEmptyConstructor> {
+            @Suppress("ClassName")
+            internal class TestEmptyConstructor__Factory : Factory<TestEmptyConstructor> {
               public override fun createInstance(scope: Scope): TestEmptyConstructor {
                 val testEmptyConstructor: TestEmptyConstructor = TestEmptyConstructor()
                 return testEmptyConstructor
@@ -1464,10 +1458,12 @@ class FactoryTest {
             package test
             
             import kotlin.Boolean
+            import kotlin.Suppress
             import toothpick.Factory
             import toothpick.Scope
             
-            public final class TestEmptyConstructor__Factory : Factory<TestEmptyConstructor> {
+            @Suppress("ClassName")
+            internal class TestEmptyConstructor__Factory : Factory<TestEmptyConstructor> {
               public override fun createInstance(scope: Scope): TestEmptyConstructor {
                 val testEmptyConstructor: TestEmptyConstructor = TestEmptyConstructor()
                 return testEmptyConstructor

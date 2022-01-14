@@ -42,11 +42,13 @@ class RelaxedFactoryForClassContainingFieldsTest {
             package test
             
             import kotlin.Boolean
+            import kotlin.Suppress
             import toothpick.Factory
             import toothpick.MemberInjector
             import toothpick.Scope
             
-            public final class TestRelaxedFactoryCreationForInjectField__Factory :
+            @Suppress("ClassName")
+            internal class TestRelaxedFactoryCreationForInjectField__Factory :
                 Factory<TestRelaxedFactoryCreationForInjectField> {
               private val memberInjector: MemberInjector<TestRelaxedFactoryCreationForInjectField> =
                   TestRelaxedFactoryCreationForInjectField__MemberInjector()
