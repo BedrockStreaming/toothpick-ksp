@@ -255,7 +255,7 @@ class FactoryProcessor : ToothpickProcessor() {
         enclosingElement.checkReleasableAnnotationValidity()
         enclosingElement.checkProvidesReleasableAnnotationValidity()
 
-        if (enclosingElement.hasAnnotation<ProvidesSingletonInScope>() && scopeName == null) {
+        if (enclosingElement.hasAnnotation<ProvidesSingleton>() && scopeName == null) {
             error(
                 enclosingElement,
                 "The type %s uses @ProvidesSingleton but doesn't have a scope annotation.",
@@ -284,7 +284,7 @@ class FactoryProcessor : ToothpickProcessor() {
         checkReleasableAnnotationValidity()
         checkProvidesReleasableAnnotationValidity()
 
-        if (hasAnnotation<ProvidesSingletonInScope>() && scopeName == null) {
+        if (hasAnnotation<ProvidesSingleton>() && scopeName == null) {
             error(
                 this,
                 "The type %s uses @ProvidesSingleton but doesn't have a scope annotation.",

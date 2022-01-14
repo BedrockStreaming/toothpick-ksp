@@ -59,7 +59,7 @@ class RelaxedFactoryForInjectConstructorTest {
             """
         )
 
-        val expectedSource = expectedJavaSource(
+        val expectedSource = expectedKtSource(
             "TestNonEmptyConstructor__Factory",
             """
             package test;
@@ -138,7 +138,7 @@ class RelaxedFactoryForInjectConstructorTest {
             """
         )
 
-        val expectedSource = expectedJavaSource(
+        val expectedSource = expectedKtSource(
             "TestNonEmptyConstructor__Factory",
             """
             package test;

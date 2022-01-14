@@ -238,7 +238,7 @@ open class FactoryGenerator(
         get() = when (val scopeName = constructorInjectionTarget.scopeName) {
             null -> CodeBlock.of("")
             // there is no scope name or the current @Scoped annotation.
-            Singleton::class.java.name -> CodeBlock.of(".getRootScope()")
+            Singleton::class.java.name -> CodeBlock.of(".rootScope")
             else -> CodeBlock.of(".getParentScope(%L::class.java)", scopeName)
         }
 }

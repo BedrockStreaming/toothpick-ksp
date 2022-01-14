@@ -37,24 +37,24 @@ class MethodMemberInjectorTest {
             """
         )
 
-        val expectedSource = expectedJavaSource(
+        val expectedSource = expectedKtSource(
             "TestMethodInjection__MemberInjector",
             """
-            package test;
+            package test
             
-            import java.lang.Override;
-            import toothpick.MemberInjector;
-            import toothpick.Scope;
+            import kotlin.Unit
+            import toothpick.MemberInjector
+            import toothpick.Scope
             
-            public final class TestMethodInjection__MemberInjector implements MemberInjector<TestMethodInjection> {
-              @Override
-              public void inject(TestMethodInjection target, Scope scope) {
-                Foo param1 = scope.getInstance(Foo.class);
-                target.m(param1);
+            public final class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
+              public override fun inject(target: TestMethodInjection, scope: Scope): Unit {
+                val param1: Foo = scope.getInstance(Foo::class.java)
+                target.m(param1)
               }
             }
             """
         )
+
         compilationAssert()
             .that(source)
             .processedWith(memberInjectorProcessors())
@@ -78,21 +78,20 @@ class MethodMemberInjectorTest {
             """
         )
 
-        val expectedSource = expectedJavaSource(
+        val expectedSource = expectedKtSource(
             "TestMethodInjection__MemberInjector",
             """
-            package test;
+            package test
             
-            import java.lang.Override;
-            import toothpick.Lazy;
-            import toothpick.MemberInjector;
-            import toothpick.Scope;
+            import kotlin.Unit
+            import toothpick.Lazy
+            import toothpick.MemberInjector
+            import toothpick.Scope
             
-            public final class TestMethodInjection__MemberInjector implements MemberInjector<TestMethodInjection> {
-              @Override
-              public void inject(TestMethodInjection target, Scope scope) {
-                Lazy<Foo> param1 = scope.getLazy(Foo.class);
-                target.m(param1);
+            public final class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
+              public override fun inject(target: TestMethodInjection, scope: Scope): Unit {
+                val param1: Lazy<Foo> = scope.getLazy(Foo::class.java)
+                target.m(param1)
               }
             }
             """
@@ -121,21 +120,20 @@ class MethodMemberInjectorTest {
             """
         )
 
-        val expectedSource = expectedJavaSource(
+        val expectedSource = expectedKtSource(
             "TestMethodInjection__MemberInjector",
             """
-            package test;
+            package test
             
-            import java.lang.Override;
-            import javax.inject.Provider;
-            import toothpick.MemberInjector;
-            import toothpick.Scope;
+            import javax.inject.Provider
+            import kotlin.Unit
+            import toothpick.MemberInjector
+            import toothpick.Scope
             
-            public final class TestMethodInjection__MemberInjector implements MemberInjector<TestMethodInjection> {
-              @Override
-              public void inject(TestMethodInjection target, Scope scope) {
-                Provider<Foo> param1 = scope.getProvider(Foo.class);
-                target.m(param1);
+            public final class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
+              public override fun inject(target: TestMethodInjection, scope: Scope): Unit {
+                val param1: Provider<Foo> = scope.getProvider(Foo::class.java)
+                target.m(param1)
               }
             }
             """
@@ -164,7 +162,7 @@ class MethodMemberInjectorTest {
             """
         )
 
-        val expectedSource = expectedJavaSource(
+        val expectedSource = expectedKtSource(
             "TestMethodInjection__MemberInjector",
             """
             package test;
@@ -335,7 +333,7 @@ class MethodMemberInjectorTest {
             """
         )
 
-        val expectedSource = expectedJavaSource(
+        val expectedSource = expectedKtSource(
             "TestMethodInjectionParent\$TestMethodInjection__MemberInjector",
             """
             package test;
@@ -377,25 +375,24 @@ class MethodMemberInjectorTest {
             """
         )
 
-        val expectedSource = expectedJavaSource(
+        val expectedSource = expectedKtSource(
             "TestMethodInjection__MemberInjector",
             """
-            package test;
+            package test
             
-            import java.lang.Exception;
-            import java.lang.Override;
-            import java.lang.RuntimeException;
-            import toothpick.MemberInjector;
-            import toothpick.Scope;
+            import java.lang.Exception
+            import java.lang.RuntimeException
+            import kotlin.Unit
+            import toothpick.MemberInjector
+            import toothpick.Scope
             
-            public final class TestMethodInjection__MemberInjector implements MemberInjector<TestMethodInjection> {
-              @Override
-              public void inject(TestMethodInjection target, Scope scope) {
-                Foo param1 = scope.getInstance(Foo.class);
+            public final class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
+              public override fun inject(target: TestMethodInjection, scope: Scope): Unit {
+                val param1: Foo = scope.getInstance(Foo::class.java)
                 try {
-                  target.m(param1);
-                } catch (Exception e1) {
-                  throw new RuntimeException(e1);
+                  target.m(param1)
+                } catch (e0: Exception) {
+                  throw RuntimeException(e0)
                 }
               }
             }
@@ -424,7 +421,7 @@ class MethodMemberInjectorTest {
             """
         )
 
-        val expectedSource = expectedJavaSource(
+        val expectedSource = expectedKtSource(
             "TestMethodInjection__MemberInjector",
             """
             package test;
