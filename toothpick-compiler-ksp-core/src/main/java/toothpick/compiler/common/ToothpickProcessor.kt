@@ -307,18 +307,6 @@ abstract class ToothpickProcessor(
             .any { member -> member.isAnnotationPresent(Inject::class) }
     }
 
-    protected fun KSClassDeclaration.isNonStaticInnerClass(): Boolean {
-        if (parentDeclaration is KSClassDeclaration && !modifiers.contains(Modifier.JAVA_STATIC)) {
-            logger.error(
-                this,
-                "Class %s is a non static inner class. @Inject constructors are not allowed in non static inner classes.",
-                qualifiedName?.asString()
-            )
-            return true
-        }
-        return false
-    }
-
     protected fun KSDeclaration.getParentClassOrNull(): KSClassDeclaration? {
         val parentClass = closestClassDeclaration()
         if (parentClass == null) {
