@@ -112,7 +112,7 @@ class MemberInjectorProcessor(
                     fileDescription = "MemberInjector for type ${generator.sourceClassName}"
                 )
 
-                if (options.debugLogOriginatingElements) {
+                if (options.verboseLogging) {
                     logger.info(
                         "%s generated class %s",
                         generator.sourceClassName.toString(),

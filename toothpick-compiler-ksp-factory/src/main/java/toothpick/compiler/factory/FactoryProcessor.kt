@@ -112,7 +112,7 @@ class FactoryProcessor(
                     fileDescription = "Factory for type ${target.sourceClass.qualifiedName?.asString()}"
                 )
 
-                if (options.debugLogOriginatingElements) {
+                if (options.verboseLogging) {
                     logger.info(
                         "%s generated class %s",
                         factoryGenerator.sourceClassName.toString(),
