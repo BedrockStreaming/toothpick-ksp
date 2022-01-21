@@ -32,6 +32,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
@@ -39,5 +40,13 @@ dependencies {
     // kapt("com.github.stephanenicolas.toothpick:toothpick-compiler:...")
 
     ksp("fr.outadoc.toothpick-compiler-ksp:toothpick-compiler-ksp:0.1")
+}
+
+ksp {
+    // If you need to, specify some extra options.
+    // See ToothpickOptions.kt for documentation.
+    arg("option1", "value1")
+    arg("option2", "value2")
+    // ...
 }
 ```
