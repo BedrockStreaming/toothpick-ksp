@@ -95,16 +95,15 @@ internal class FactoryGenerator(
                 ?.toClassName()
                 ?: return this
 
-        val memberInjectorSuper: ParameterizedTypeName =
-            MemberInjector::class.asClassName()
-                .parameterizedBy(superTypeThatNeedsInjection)
-
-        addProperty(
-            PropertySpec
-                .builder("memberInjector", memberInjectorSuper, KModifier.PRIVATE)
-                .initializer("%T()", superTypeThatNeedsInjection.memberInjectorClassName)
-                .build()
-        )
+        PropertySpec
+            .builder(
+                "memberInjector",
+                MemberInjector::class.asClassName().parameterizedBy(superTypeThatNeedsInjection),
+                KModifier.PRIVATE
+            )
+            .initializer("%T()", superTypeThatNeedsInjection.memberInjectorClassName)
+            .build()
+            .also { addProperty(it) }
     }
 
     private fun TypeSpec.Builder.emitCreateInstance(): TypeSpec.Builder = apply {
