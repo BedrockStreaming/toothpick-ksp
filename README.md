@@ -27,7 +27,7 @@ plugins {
     // kotlin("kapt") version "..."
 
     // Use the version that matches your Kotlin version!
-    id("com.google.devtools.ksp") version "1.6.10-1.0.4"
+    id("com.google.devtools.ksp") version "1.7.0-1.0.6"
 }
 
 repositories {
@@ -39,7 +39,7 @@ dependencies {
     // Remove this:
     // kapt("com.github.stephanenicolas.toothpick:toothpick-compiler:...")
 
-    ksp("fr.outadoc.toothpick-ksp:compiler:0.0.4")
+    ksp("fr.outadoc.toothpick-ksp:compiler:0.0.5")
 }
 
 ksp {
