@@ -129,7 +129,7 @@ class RelaxedFactoryForClassContainingFieldsTest {
             .processedWith(FactoryProcessorProvider(), MemberInjectorProcessorProvider())
             .failsToCompile()
             .withLogContaining(
-                "@Inject-annotated property test.TestRelaxedFactoryCreationForInjectField.foo must not be private."
+                "@Inject-annotated test.TestRelaxedFactoryCreationForInjectField.foo must not be private."
             )
     }
 
@@ -152,7 +152,7 @@ class RelaxedFactoryForClassContainingFieldsTest {
             .processedWith(FactoryProcessorProvider(), MemberInjectorProcessorProvider())
             .failsToCompile()
             .withLogContaining(
-                "@Inject-annotated property test.TestRelaxedFactoryCreationForInjectField.foo must not be private."
+                "@Inject-annotated test.TestRelaxedFactoryCreationForInjectField.foo must not be private."
             )
     }
 
@@ -177,7 +177,7 @@ class RelaxedFactoryForClassContainingFieldsTest {
             .processedWith(FactoryProcessorProvider(), MemberInjectorProcessorProvider())
             .failsToCompile()
             .withLogContaining(
-                "Parent class of @Inject-annotated class test.TestRelaxedFactoryCreationForInjectField.InnerClass.foo must not be private."
+                "Parent class of @Inject-annotated test.TestRelaxedFactoryCreationForInjectField.InnerClass.foo must not be private."
             )
     }
 
@@ -202,7 +202,7 @@ class RelaxedFactoryForClassContainingFieldsTest {
             .processedWith(FactoryProcessorProvider(), MemberInjectorProcessorProvider())
             .failsToCompile()
             .withLogContaining(
-                "TestRelaxedFactoryCreationForInjectField.kt:5: Parent class of @Inject-annotated class test.TestRelaxedFactoryCreationForInjectField.InnerClass.foo must not be private."
+                "TestRelaxedFactoryCreationForInjectField.kt:5: Parent class of @Inject-annotated test.TestRelaxedFactoryCreationForInjectField.InnerClass.foo must not be private."
             )
     }
 

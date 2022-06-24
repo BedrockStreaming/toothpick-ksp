@@ -918,7 +918,7 @@ class FieldMemberInjectorTest {
             .processedWith(MemberInjectorProcessorProvider())
             .failsToCompile()
             .withLogContaining(
-                "@Inject-annotated property test.TestFieldInjection.foo must not be private."
+                "@Inject-annotated test.TestFieldInjection.foo must not be private."
             )
     }
 
@@ -941,7 +941,7 @@ class FieldMemberInjectorTest {
             .processedWith(MemberInjectorProcessorProvider())
             .failsToCompile()
             .withLogContaining(
-                "@Inject-annotated property test.TestFieldInjection.foo must not be private."
+                "@Inject-annotated test.TestFieldInjection.foo must not be private."
             )
     }
 
@@ -965,7 +965,7 @@ class FieldMemberInjectorTest {
             .processedWith(MemberInjectorProcessorProvider())
             .failsToCompile()
             .withLogContaining(
-                "@Inject-annotated property test.TestFieldInjection.foo must be mutable."
+                "@Inject-annotated test.TestFieldInjection.foo must be mutable."
             )
     }
 
@@ -988,7 +988,7 @@ class FieldMemberInjectorTest {
             .processedWith(MemberInjectorProcessorProvider())
             .failsToCompile()
             .withLogContaining(
-                "@Inject-annotated property test.TestFieldInjection.foo must be mutable."
+                "@Inject-annotated test.TestFieldInjection.foo must be mutable."
             )
     }
 
@@ -1014,7 +1014,7 @@ class FieldMemberInjectorTest {
             .processedWith(MemberInjectorProcessorProvider())
             .failsToCompile()
             .withLogContaining(
-                "Parent class of @Inject-annotated class test.TestFieldInjection.InnerClass.foo must not be private."
+                "Parent class of @Inject-annotated test.TestFieldInjection.InnerClass.foo must not be private."
             )
     }
 
@@ -1039,7 +1039,7 @@ class FieldMemberInjectorTest {
             .processedWith(MemberInjectorProcessorProvider())
             .failsToCompile()
             .withLogContaining(
-                "Parent class of @Inject-annotated class test.TestFieldInjection.InnerClass.foo must not be private."
+                "Parent class of @Inject-annotated test.TestFieldInjection.InnerClass.foo must not be private."
             )
     }
 

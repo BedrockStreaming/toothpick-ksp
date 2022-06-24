@@ -140,7 +140,7 @@ class MemberInjectorProcessor(
         if (isPrivate()) {
             logger.error(
                 this,
-                "@Inject-annotated property %s must not be private.",
+                "@Inject-annotated %s must not be private.",
                 qualifiedName?.asString()
             )
             return false
@@ -149,7 +149,7 @@ class MemberInjectorProcessor(
         if (!isMutable || modifiers.contains(Modifier.FINAL)) {
             logger.error(
                 this,
-                "@Inject-annotated property %s must be mutable.",
+                "@Inject-annotated %s must be mutable.",
                 qualifiedName?.asString()
             )
             return false
@@ -165,7 +165,7 @@ class MemberInjectorProcessor(
         if (isPrivate()) {
             logger.error(
                 this,
-                "@Inject-annotated method %s must not be private.",
+                "@Inject-annotated function %s must not be private.",
                 qualifiedName?.asString()
             )
             return false
@@ -197,7 +197,7 @@ class MemberInjectorProcessor(
             if (!hasWarningSuppressed(SUPPRESS_WARNING_ANNOTATION_VISIBLE_VALUE)) {
                 logger.crashOrWarnWhenMethodIsNotPackageOrInternal(
                     this,
-                    "@Inject-annotated method %s should have package or internal visibility.",
+                    "@Inject-annotated function %s should have package or internal visibility.",
                     qualifiedName?.asString()
                 )
             }

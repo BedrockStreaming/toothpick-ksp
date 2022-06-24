@@ -155,7 +155,7 @@ abstract class ToothpickProcessor(
         if (parentClass == null) {
             logger.error(
                 this,
-                "@Inject-annotated property %s must be part of a class.",
+                "@Inject-annotated %s must be part of a class.",
                 qualifiedName?.asString()
             )
             return null
@@ -164,7 +164,7 @@ abstract class ToothpickProcessor(
         if (parentClass.isPrivate()) {
             logger.error(
                 this,
-                "Parent class of @Inject-annotated class %s must not be private.",
+                "Parent class of @Inject-annotated %s must not be private.",
                 qualifiedName?.asString()
             )
             return null
