@@ -9,5 +9,5 @@ inject = "javax.inject:javax.inject:1"
 junit4 = "junit:junit:4.13-beta-3"
 kotlinpoet-core = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlinpoet" }
-ksp = "com.google.devtools.ksp:symbol-processing-api:1.7.0-1.0.6"
+ksp = "com.google.devtools.ksp:symbol-processing-api:1.7.22-1.0.8"
 tp = "com.github.stephanenicolas.toothpick:toothpick:3.1.0"

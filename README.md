@@ -27,7 +27,7 @@ plugins {
     // kotlin("kapt") version "..."
 
     // Use the version that matches your Kotlin version!
-    id("com.google.devtools.ksp") version "1.7.0-1.0.6"
+    id("com.google.devtools.ksp") version "1.7.22-1.0.8"
 }
 
 repositories {
