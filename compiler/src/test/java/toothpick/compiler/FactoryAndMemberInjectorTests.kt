@@ -115,6 +115,72 @@ class FactoryAndMemberInjectorTests {
         )
 
     @Test
+    fun testAnObjectThatNeedsInjection_shouldHaveAFactoryThatInjectsIt_whenItHasAnInjectedField_kt() {
+        val source = ktSource(
+            "TestAnObjectThatNeedsInjection",
+            """
+            package test
+            import javax.inject.Inject
+            object TestAnObjectThatNeedsInjection {
+                @Inject lateinit var s: String
+            }
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(FactoryProcessorProvider(), MemberInjectorProcessorProvider())
+            .compilesWithoutError()
+            .generatesSources(
+                testAnObjectThatNeedsInjection_shouldHaveAFactoryThatInjectsIt_whenItHasAnInjectedField_expected
+            )
+    }
+
+    private val testAnObjectThatNeedsInjection_shouldHaveAFactoryThatInjectsIt_whenItHasAnInjectedField_expected =
+        expectedKtSource(
+            "test/TestAnObjectThatNeedsInjection__Factory",
+            """
+            package test
+            
+            import kotlin.Boolean
+            import kotlin.Suppress
+            import toothpick.Factory
+            import toothpick.MemberInjector
+            import toothpick.Scope
+            
+            @Suppress(
+              "ClassName",
+              "RedundantVisibilityModifier",
+            )
+            public class TestAnObjectThatNeedsInjection__Factory : Factory<TestAnObjectThatNeedsInjection> {
+              private val memberInjector: MemberInjector<TestAnObjectThatNeedsInjection> =
+                  TestAnObjectThatNeedsInjection__MemberInjector()
+            
+              @Suppress("NAME_SHADOWING")
+              public override fun createInstance(scope: Scope): TestAnObjectThatNeedsInjection {
+                val scope = getTargetScope(scope)
+                return TestAnObjectThatNeedsInjection
+                .apply {
+                  memberInjector.inject(this, scope)
+                }
+              }
+            
+              public override fun getTargetScope(scope: Scope): Scope = scope
+            
+              public override fun hasScopeAnnotation(): Boolean = false
+            
+              public override fun hasSingletonAnnotation(): Boolean = false
+            
+              public override fun hasReleasableAnnotation(): Boolean = false
+            
+              public override fun hasProvidesSingletonAnnotation(): Boolean = false
+            
+              public override fun hasProvidesReleasableAnnotation(): Boolean = false
+            }
+            """
+        )
+
+    @Test
     @Ignore("https://github.com/tschuchortdev/kotlin-compile-testing/issues/105")
     fun testAInnerClassThatNeedsInjection_shouldHaveAFactoryThatInjectsIt_whenItHasAnInjectedField_java() {
         val source = javaSource(

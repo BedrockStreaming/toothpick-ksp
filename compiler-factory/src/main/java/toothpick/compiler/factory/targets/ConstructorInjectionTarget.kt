@@ -28,6 +28,7 @@ import toothpick.compiler.common.generators.targets.VariableInjectionTarget
 data class ConstructorInjectionTarget(
     val sourceClass: KSClassDeclaration,
     val scopeName: KSName?,
+    val isObject: Boolean,
     val hasSingletonAnnotation: Boolean,
     val hasReleasableAnnotation: Boolean,
     val hasProvidesSingletonAnnotation: Boolean,

@@ -149,12 +149,16 @@ internal class FactoryGenerator(
                             )
                         }
 
-                        addStatement(
-                            "return %T(%L)",
-                            sourceClassName,
-                            List(constructorInjectionTarget.parameters.size) { i -> "param${i + 1}" }
-                                .joinToString(", ")
-                        )
+                        if (!constructorInjectionTarget.isObject) {
+                            addStatement(
+                                "return %T(%L)",
+                                sourceClassName,
+                                List(constructorInjectionTarget.parameters.size) { i -> "param${i + 1}" }
+                                    .joinToString(", ")
+                            )
+                        } else {
+                            addStatement("return %T", sourceClassName)
+                        }
 
                         if (constructorInjectionTarget.superClassThatNeedsMemberInjection != null) {
                             beginControlFlow(".apply")

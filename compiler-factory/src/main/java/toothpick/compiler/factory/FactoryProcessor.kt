@@ -28,6 +28,7 @@ import com.google.devtools.ksp.isPrivate
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.FunctionKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -277,6 +278,7 @@ class FactoryProcessor(
         return ConstructorInjectionTarget(
             sourceClass = parentClass,
             scopeName = scopeName,
+            isObject = parentClass.classKind == ClassKind.OBJECT,
             hasSingletonAnnotation = parentClass.isAnnotationPresent(Singleton::class),
             hasReleasableAnnotation = parentClass.isAnnotationPresent(Releasable::class),
             hasProvidesSingletonAnnotation = parentClass.isAnnotationPresent(ProvidesSingleton::class),
@@ -349,6 +351,7 @@ class FactoryProcessor(
         return ConstructorInjectionTarget(
             sourceClass = this,
             scopeName = scopeName,
+            isObject = classKind == ClassKind.OBJECT,
             hasSingletonAnnotation = isAnnotationPresent(Singleton::class),
             hasReleasableAnnotation = isAnnotationPresent(Releasable::class),
             hasProvidesSingletonAnnotation = isAnnotationPresent(ProvidesSingleton::class),
