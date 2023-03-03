@@ -1790,4 +1790,276 @@ class FactoryTest {
                 "Parameter n in method/constructor test.TestPrimitiveConstructor#<init> is of type int which is not supported by Toothpick."
             )
     }
+
+    @Test
+    fun testInjectedConstructorForNestedClassWithInternalParentModifier_kt() {
+        val source = ktSource(
+            "TestNestedClassConstructor",
+            """
+            package test
+            import kotlin.collections.MutableList
+            import javax.inject.Inject
+            internal class TestNestedClassConstructor @Inject constructor() {
+                class NestedClass @Inject constructor()
+            }
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(FactoryProcessorProvider())
+            .compilesWithoutError()
+            .generatesSources(testNestedClassWithInternal_expected)
+    }
+
+    private val testNestedClassWithInternal_expected = expectedKtSource(
+        "test/TestNestedClassConstructor\$NestedClass__Factory",
+        """
+            package test
+            
+            import kotlin.Boolean
+            import kotlin.Suppress
+            import toothpick.Factory
+            import toothpick.Scope
+            
+            @Suppress(
+              "ClassName",
+              "RedundantVisibilityModifier",
+            )
+            internal class `TestNestedClassConstructor${'$'}NestedClass__Factory` :
+                Factory<TestNestedClassConstructor.NestedClass> {
+              public override fun createInstance(scope: Scope): TestNestedClassConstructor.NestedClass =
+                  TestNestedClassConstructor.NestedClass()
+            
+              public override fun getTargetScope(scope: Scope): Scope = scope
+            
+              public override fun hasScopeAnnotation(): Boolean = false
+            
+              public override fun hasSingletonAnnotation(): Boolean = false
+            
+              public override fun hasReleasableAnnotation(): Boolean = false
+            
+              public override fun hasProvidesSingletonAnnotation(): Boolean = false
+            
+              public override fun hasProvidesReleasableAnnotation(): Boolean = false
+            }
+            """
+    )
+
+    @Test
+    fun testInjectedConstructorForTwoNestedClassesWithInternalParentModifier_kt() {
+        val source = ktSource(
+            "TestNestedClassConstructor",
+            """
+            package test
+            import kotlin.collections.MutableList
+            import javax.inject.Inject
+            internal class TestNestedClassConstructor @Inject constructor() {
+                class NestedClass @Inject constructor() {
+                    class OneMoreNestedClass @Inject constructor()
+                }
+            }
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(FactoryProcessorProvider())
+            .compilesWithoutError()
+            .generatesSources(testLastNestedClassWithInternal_expected)
+    }
+
+    private val testLastNestedClassWithInternal_expected = expectedKtSource(
+        "test/TestNestedClassConstructor\$NestedClass\$OneMoreNestedClass__Factory",
+        """
+            package test
+            
+            import kotlin.Boolean
+            import kotlin.Suppress
+            import toothpick.Factory
+            import toothpick.Scope
+            
+            @Suppress(
+              "ClassName",
+              "RedundantVisibilityModifier",
+            )
+            internal class `TestNestedClassConstructor${'$'}NestedClass${'$'}OneMoreNestedClass__Factory` :
+                Factory<TestNestedClassConstructor.NestedClass.OneMoreNestedClass> {
+              public override fun createInstance(scope: Scope):
+                  TestNestedClassConstructor.NestedClass.OneMoreNestedClass =
+                  TestNestedClassConstructor.NestedClass.OneMoreNestedClass()
+            
+              public override fun getTargetScope(scope: Scope): Scope = scope
+            
+              public override fun hasScopeAnnotation(): Boolean = false
+            
+              public override fun hasSingletonAnnotation(): Boolean = false
+            
+              public override fun hasReleasableAnnotation(): Boolean = false
+            
+              public override fun hasProvidesSingletonAnnotation(): Boolean = false
+            
+              public override fun hasProvidesReleasableAnnotation(): Boolean = false
+            }
+            """
+    )
+
+    @Test
+    fun testInjectedConstructorForTwoNestedClassesWithInternalMiddleParentModifier_kt() {
+        val source = ktSource(
+            "TestNestedClassConstructor",
+            """
+            package test
+            import kotlin.collections.MutableList
+            import javax.inject.Inject
+            class TestNestedClassConstructor @Inject constructor() {
+                internal class NestedClass @Inject constructor() {
+                    class OneMoreNestedClass @Inject constructor()
+                }
+            }
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(FactoryProcessorProvider())
+            .compilesWithoutError()
+            .generatesSources(testLastNestedClassWithInternal_expected)
+    }
+
+    @Test
+    fun testInjectedConstructorForPrivateNestedClassWithInternalParentModifier_kt() {
+        val source = ktSource(
+            "TestNestedClassConstructor",
+            """
+            package test
+            import kotlin.collections.MutableList
+            import javax.inject.Inject
+            internal class TestNestedClassConstructor @Inject constructor() {
+                class NestedClass @Inject constructor() {
+                    private class OneMoreNestedClass @Inject constructor()
+                }
+            }
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(FactoryProcessorProvider())
+            .failsToCompile()
+            .withLogContaining(
+                "/sources/TestNestedClassConstructor.kt:6: Class test.TestNestedClassConstructor.NestedClass.OneMoreNestedClass is private. @Inject-annotated constructors are not allowed in private classes."
+            )
+    }
+
+    // Do not use the private modifier in your code
+    @Test
+    fun testInjectedConstructorForPrivateMiddleNestedClassWithInternalParentModifier_kt() {
+        val source = ktSource(
+            "TestNestedClassConstructor",
+            """
+            package test
+            import kotlin.collections.MutableList
+            import javax.inject.Inject
+            internal class TestNestedClassConstructor @Inject constructor() {
+                private class NestedClass @Inject constructor() {
+                    class OneMoreNestedClass @Inject constructor()
+                }
+            }
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(FactoryProcessorProvider())
+            .failsToCompile()
+            .withLogContaining(
+                "/sources/TestNestedClassConstructor.kt:5: Class test.TestNestedClassConstructor.NestedClass is private. @Inject-annotated constructors are not allowed in private classes."
+            )
+    }
+
+    // Do not use the private modifier in your code
+    @Test
+    fun testInjectedConstructorForProtectedMiddleNestedClassAndPrivateLastWithInternalParentModifier_kt() {
+        val source = ktSource(
+            "TestNestedClassConstructor",
+            """
+            package test
+            import kotlin.collections.MutableList
+            import javax.inject.Inject
+            internal class TestNestedClassConstructor @Inject constructor() {
+                protected class NestedClass @Inject constructor() {
+                    private class OneMoreNestedClass @Inject constructor()
+                }
+            }
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(FactoryProcessorProvider())
+            .failsToCompile()
+            .withLogContaining(
+                "/sources/TestNestedClassConstructor.kt:6: Class test.TestNestedClassConstructor.NestedClass.OneMoreNestedClass is private. @Inject-annotated constructors are not allowed in private classes."
+            )
+    }
+
+    @Test
+    fun testInjectedConstructorForProtectedMiddleNestedClassWithInternalParentModifier_kt() {
+        val source = ktSource(
+            "TestNestedClassConstructor",
+            """
+            package test
+            import kotlin.collections.MutableList
+            import javax.inject.Inject
+            internal class TestNestedClassConstructor @Inject constructor() {
+                protected class NestedClass @Inject constructor() {
+                    class OneMoreNestedClass @Inject constructor()
+                }
+            }
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(FactoryProcessorProvider())
+            .compilesWithoutError()
+            .generatesSources(testMiddleNestedClassWithProtected_expected)
+    }
+
+    private val testMiddleNestedClassWithProtected_expected = expectedKtSource(
+        "test/TestNestedClassConstructor\$NestedClass\$OneMoreNestedClass__Factory",
+        """
+            package test
+            
+            import kotlin.Boolean
+            import kotlin.Suppress
+            import toothpick.Factory
+            import toothpick.Scope
+            
+            @Suppress(
+              "ClassName",
+              "RedundantVisibilityModifier",
+            )
+            protected class `TestNestedClassConstructor${'$'}NestedClass${'$'}OneMoreNestedClass__Factory` :
+                Factory<TestNestedClassConstructor.NestedClass.OneMoreNestedClass> {
+              public override fun createInstance(scope: Scope):
+                  TestNestedClassConstructor.NestedClass.OneMoreNestedClass =
+                  TestNestedClassConstructor.NestedClass.OneMoreNestedClass()
+            
+              public override fun getTargetScope(scope: Scope): Scope = scope
+            
+              public override fun hasScopeAnnotation(): Boolean = false
+            
+              public override fun hasSingletonAnnotation(): Boolean = false
+            
+              public override fun hasReleasableAnnotation(): Boolean = false
+            
+              public override fun hasProvidesSingletonAnnotation(): Boolean = false
+            
+              public override fun hasProvidesReleasableAnnotation(): Boolean = false
+            }
+            """
+    )
+
 }
