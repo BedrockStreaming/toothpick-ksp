@@ -63,7 +63,7 @@ internal class FactoryGenerator(
             packageName = sourceClassName.packageName,
             TypeSpec.classBuilder(generatedClassName)
                 .addOriginatingKSFile(sourceClass.containingFile!!)
-                .addModifiers(getFinalModifier() ?: KModifier.PUBLIC)
+                .addModifiers(getNestingAwareModifier() ?: KModifier.PUBLIC)
                 .addSuperinterface(
                     Factory::class.asClassName().parameterizedBy(sourceClassName)
                 )
@@ -85,7 +85,7 @@ internal class FactoryGenerator(
         )
     }
 
-    private fun getFinalModifier(): KModifier? {
+    private fun getNestingAwareModifier(): KModifier? {
         var parentDeclaration = sourceClass.parentDeclaration
         var sourceModifier = sourceClass.getVisibility().toKModifier()
 
