@@ -50,7 +50,7 @@ import javax.inject.Singleton
  * See Optimistic creation of factories in TP wiki.
  */
 internal class FactoryGenerator(
-    private val constructorInjectionTarget: ConstructorInjectionTarget
+    private val constructorInjectionTarget: ConstructorInjectionTarget,
 ) : TPCodeGenerator {
 
     private val sourceClass: KSClassDeclaration = constructorInjectionTarget.sourceClass
@@ -63,7 +63,7 @@ internal class FactoryGenerator(
             packageName = sourceClassName.packageName,
             TypeSpec.classBuilder(generatedClassName)
                 .addOriginatingKSFile(sourceClass.containingFile!!)
-                .addModifiers(sourceClass.getVisibility().toKModifier() ?: KModifier.PUBLIC)
+                .addModifiers(getNestingAwareModifier() ?: KModifier.PUBLIC)
                 .addSuperinterface(
                     Factory::class.asClassName().parameterizedBy(sourceClassName)
                 )
@@ -83,6 +83,41 @@ internal class FactoryGenerator(
                 .emitHasProvidesReleasableAnnotation()
                 .build()
         )
+    }
+
+    private fun getNestingAwareModifier(): KModifier? {
+        var parentDeclaration = sourceClass.parentDeclaration
+        var sourceModifier = sourceClass.getVisibility().toKModifier()
+
+        while (parentDeclaration != null) {
+            sourceModifier = findModifier(
+                parentDeclaration.getVisibility().toKModifier(),
+                sourceModifier
+            )
+            parentDeclaration = parentDeclaration.parentDeclaration
+        }
+
+        return sourceModifier
+    }
+
+    // With the private modifier, the program will not compile, but just in case, we process it
+    private fun findModifier(parentDeclarationModifier: KModifier?, sourceDeclarationModifier: KModifier?): KModifier? {
+        return when (parentDeclarationModifier) {
+            KModifier.INTERNAL -> {
+                when (sourceDeclarationModifier) {
+                    KModifier.PRIVATE, KModifier.PROTECTED -> sourceDeclarationModifier
+                    else -> parentDeclarationModifier
+                }
+            }
+            KModifier.PROTECTED -> {
+                when (sourceDeclarationModifier) {
+                    KModifier.PRIVATE -> sourceDeclarationModifier
+                    else -> parentDeclarationModifier
+                }
+            }
+            KModifier.PRIVATE -> parentDeclarationModifier
+            else -> sourceDeclarationModifier
+        }
     }
 
     private fun TypeSpec.Builder.emitSuperMemberInjectorFieldIfNeeded() = apply {
