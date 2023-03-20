@@ -32,6 +32,7 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.Variance
 import com.squareup.kotlinpoet.ksp.writeTo
 import toothpick.compiler.common.generators.TPCodeGenerator
@@ -65,12 +66,14 @@ abstract class ToothpickProcessor(
     }
 
     protected fun KSType.isValidInjectedType(node: KSNode, qualifiedName: String?): Boolean {
-        return if (!isValidInjectedClassKind()) false
+        return if (!isValidInjectedClassKind() && !isTypeAlias()) false
         else !isProviderOrLazy() || isValidProviderOrLazy(node, qualifiedName)
     }
 
     private fun KSType.isValidInjectedClassKind(): Boolean =
         (declaration as? KSClassDeclaration)?.classKind in validInjectableTypes
+
+    private fun KSType.isTypeAlias(): Boolean = declaration is KSTypeAlias
 
     private fun KSType.isValidProviderOrLazy(node: KSNode, qualifiedName: String?): Boolean {
         // e.g. Provider<Foo<String>>

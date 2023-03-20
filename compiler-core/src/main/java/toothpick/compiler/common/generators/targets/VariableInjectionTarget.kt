@@ -27,6 +27,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -99,7 +100,7 @@ sealed class VariableInjectionTarget(
                         kindParamClass = type.getInjectedType()
                     )
                 else -> Instance(
-                    memberType = type,
+                    memberType = type.findActualType(),
                     memberName = name,
                     qualifierName = qualifierName
                 )
@@ -145,6 +146,15 @@ sealed class VariableInjectionTarget(
          * (e.g. in `Lazy<B>`, type is `B`, not `Lazy`).
          */
         private fun KSType.getInjectedType(): KSType = arguments.first().type!!.resolve()
+
+        private fun KSType.findActualType(): KSType {
+            val typeDeclaration = declaration
+            return if (typeDeclaration is KSTypeAlias) {
+                typeDeclaration.type.resolve().findActualType()
+            } else {
+                this
+            }
+        }
     }
 }
 
