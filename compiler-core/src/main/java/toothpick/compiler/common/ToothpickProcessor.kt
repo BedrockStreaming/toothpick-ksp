@@ -66,7 +66,8 @@ abstract class ToothpickProcessor(
     }
 
     protected fun KSType.isValidInjectedType(node: KSNode, qualifiedName: String?): Boolean {
-        return if (!isValidInjectedClassKind() && !isTypeAlias()) false
+        return if (isError) false
+        else if (!isValidInjectedClassKind() && !isTypeAlias()) false
         else !isProviderOrLazy() || isValidProviderOrLazy(node, qualifiedName)
     }
 

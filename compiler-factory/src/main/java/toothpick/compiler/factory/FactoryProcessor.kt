@@ -252,12 +252,22 @@ class FactoryProcessor(
 
         if (parentClass.isNonStaticInnerClass()) return false
 
-        return parameters.all { param ->
+        val invalidParams = parameters.filterNot { param ->
             param.type.resolve().isValidInjectedType(
                 node = this,
                 qualifiedName = param.name?.asString()
             )
         }
+
+        if (invalidParams.isNotEmpty()) {
+            logger.error(
+                this,
+                "Class ${parentClass.qualifiedName?.asString()} has invalid parameters: $invalidParams",
+            )
+        }
+
+        return invalidParams.isEmpty()
+
     }
 
     private fun KSFunctionDeclaration.createConstructorInjectionTarget(resolver: Resolver): ConstructorInjectionTarget {

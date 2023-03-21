@@ -58,7 +58,7 @@ import javax.inject.Inject
 class MemberInjectorProcessor(
     processorOptions: Map<String, String>,
     codeGenerator: CodeGenerator,
-    logger: KSPLogger
+    logger: KSPLogger,
 ) : ToothpickProcessor(
     processorOptions, codeGenerator, logger
 ) {
@@ -155,10 +155,21 @@ class MemberInjectorProcessor(
             return false
         }
 
-        return type.resolve().isValidInjectedType(
+        val isValidProperty = type.resolve().isValidInjectedType(
             node = this,
             qualifiedName = qualifiedName?.asString()
         )
+
+        if (!isValidProperty) {
+            val parentQualifiedName = parentDeclaration?.qualifiedName?.asString()
+            logger.error(
+                this,
+                "Class $parentQualifiedName has invalid property: ${simpleName.asString()}",
+            )
+        }
+
+        return isValidProperty
+
     }
 
     private fun KSFunctionDeclaration.isValidInjectAnnotatedMethod(): Boolean {
@@ -181,17 +192,23 @@ class MemberInjectorProcessor(
             return false
         }
 
-        val areParametersValid =
+        val invalidParams =
             parameters
-                .map { param -> param.type.resolve() }
-                .all { type ->
-                    type.isValidInjectedType(
+                .filterNot { param ->
+                    param.type.resolve().isValidInjectedType(
                         node = this,
                         qualifiedName = qualifiedName?.asString()
                     )
                 }
 
-        if (!areParametersValid) return false
+        if (invalidParams.isNotEmpty()) {
+            logger.error(
+                this,
+                "Class ${parentClass.qualifiedName?.asString()} has invalid parameters: $invalidParams",
+            )
+
+            return false
+        }
 
         if (!isJavaPackagePrivate() && !isInternal()) {
             if (!hasWarningSuppressed(SUPPRESS_WARNING_ANNOTATION_VISIBLE_VALUE)) {
@@ -207,7 +224,11 @@ class MemberInjectorProcessor(
     }
 
     @Suppress("SameParameterValue")
-    private fun KSPLogger.crashOrWarnWhenMethodIsNotPackageOrInternal(node: KSNode, message: String, vararg args: Any?) {
+    private fun KSPLogger.crashOrWarnWhenMethodIsNotPackageOrInternal(
+        node: KSNode,
+        message: String,
+        vararg args: Any?,
+    ) {
         if (options.crashWhenInjectedMethodIsNotPackageVisible) error(node, message, *args)
         else warn(node, message, *args)
     }
