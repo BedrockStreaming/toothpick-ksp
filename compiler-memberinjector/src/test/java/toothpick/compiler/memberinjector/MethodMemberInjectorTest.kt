@@ -812,4 +812,75 @@ class MethodMemberInjectorTest {
             }
             """
     )
+
+    @Test
+    fun testMethodInjectionWithTypeAlias_kt() {
+        val source = ktSource(
+            "TestMethodInjection",
+            """
+            package test
+            import javax.inject.Inject
+            typealias TestTypeAlias = () -> String
+            class TestMethodInjection {
+              @Inject
+              fun m(testTypeAlias: TestTypeAlias) {}
+            }
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(MemberInjectorProcessorProvider())
+            .compilesWithoutError()
+            .generatesSources(testMethodInjectionWithTypeAlias_expected)
+    }
+
+    private val testMethodInjectionWithTypeAlias_expected = expectedKtSource(
+        "test/TestMethodInjection__MemberInjector",
+        """
+            package test
+            
+            import kotlin.Function0
+            import kotlin.String
+            import kotlin.Suppress
+            import kotlin.Unit
+            import toothpick.MemberInjector
+            import toothpick.Scope
+            
+            @Suppress(
+              "ClassName",
+              "RedundantVisibilityModifier",
+              "UNCHECKED_CAST",
+            )
+            public class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
+              public override fun inject(target: TestMethodInjection, scope: Scope): Unit {
+                val param1 = scope.getInstance(Function0::class.java) as Function0<String>
+                target.m(param1)
+              }
+            }
+            """
+    )
+
+    @Test
+    fun testMethodInjectionWithIncorrectParameter_kt() {
+        val source = ktSource(
+            "TestMethodInjection",
+            """
+            package test
+            import javax.inject.Inject
+            class TestMethodInjection {
+              @Inject
+              fun m(invalid: Invalid) {}
+            }
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(MemberInjectorProcessorProvider())
+            .failsToCompile()
+            .withLogContaining(
+                "Class test.TestMethodInjection has invalid parameters: [invalid]"
+            )
+    }
 }

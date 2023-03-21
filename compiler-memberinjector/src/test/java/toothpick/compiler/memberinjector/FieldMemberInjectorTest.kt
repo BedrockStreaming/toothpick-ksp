@@ -1505,4 +1505,74 @@ class FieldMemberInjectorTest {
                 "Field test.TestFieldInjection.foo is of type int which is not supported by Toothpick."
             )
     }
+
+    @Test
+    fun testFieldInjectionWithTypeAlias_kt() {
+        val source = ktSource(
+            "TestFieldInjection",
+            """
+            package test
+            import javax.inject.Inject
+            typealias TestTypeAlias = () -> String
+            class TestFieldInjection {
+              @Inject lateinit var testTypeAlias: TestTypeAlias
+            }
+            class Foo
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(MemberInjectorProcessorProvider())
+            .compilesWithoutError()
+            .generatesSources(testFieldInjectionWithTypeAlias_expected)
+    }
+
+    private val testFieldInjectionWithTypeAlias_expected = expectedKtSource(
+        "test/TestFieldInjection__MemberInjector",
+        """
+            package test
+            
+            import kotlin.Function0
+            import kotlin.String
+            import kotlin.Suppress
+            import kotlin.Unit
+            import toothpick.MemberInjector
+            import toothpick.Scope
+            
+            @Suppress(
+              "ClassName",
+              "RedundantVisibilityModifier",
+              "UNCHECKED_CAST",
+            )
+            public class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
+              public override fun inject(target: TestFieldInjection, scope: Scope): Unit {
+                target.testTypeAlias = scope.getInstance(Function0::class.java) as Function0<String>
+              }
+            }
+            """
+    )
+
+    @Test
+    fun testFieldInjectionWithIncorrectProperty_kt() {
+        val source = ktSource(
+            "TestFieldInjection",
+            """
+            package test
+            import javax.inject.Inject
+            class TestFieldInjection {
+              @Inject lateinit var invalid: Invalid
+            }
+            class Foo
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(MemberInjectorProcessorProvider())
+            .failsToCompile()
+            .withLogContaining(
+                "Class test.TestFieldInjection has invalid property: invalid"
+            )
+    }
 }

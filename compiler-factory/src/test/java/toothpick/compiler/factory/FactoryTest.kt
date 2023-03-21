@@ -2061,4 +2061,85 @@ class FactoryTest {
             }
             """
     )
+
+    @Test
+    fun testNonEmptyConstructorWithTypeAlias_kt() {
+        val source = ktSource(
+            "TestNonEmptyConstructor",
+            """
+            package test
+            import javax.inject.Inject
+            typealias TestTypeAlias = () -> String
+            class TestNonEmptyConstructor @Inject constructor(testTypeAlias: TestTypeAlias)
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(FactoryProcessorProvider())
+            .compilesWithoutError()
+            .generatesSources(testNonEmptyConstructorWithTypeAlias_expected)
+    }
+
+    private val testNonEmptyConstructorWithTypeAlias_expected = expectedKtSource(
+        "test/TestNonEmptyConstructor__Factory",
+        """
+            package test
+            
+            import kotlin.Boolean
+            import kotlin.Function0
+            import kotlin.String
+            import kotlin.Suppress
+            import toothpick.Factory
+            import toothpick.Scope
+            
+            @Suppress(
+              "ClassName",
+              "RedundantVisibilityModifier",
+            )
+            public class TestNonEmptyConstructor__Factory : Factory<TestNonEmptyConstructor> {
+              @Suppress(
+                "UNCHECKED_CAST",
+                "NAME_SHADOWING",
+              )
+              public override fun createInstance(scope: Scope): TestNonEmptyConstructor {
+                val scope = getTargetScope(scope)
+                val param1 = scope.getInstance(Function0::class.java) as Function0<String>
+                return TestNonEmptyConstructor(param1)
+              }
+            
+              public override fun getTargetScope(scope: Scope): Scope = scope
+            
+              public override fun hasScopeAnnotation(): Boolean = false
+            
+              public override fun hasSingletonAnnotation(): Boolean = false
+            
+              public override fun hasReleasableAnnotation(): Boolean = false
+            
+              public override fun hasProvidesSingletonAnnotation(): Boolean = false
+            
+              public override fun hasProvidesReleasableAnnotation(): Boolean = false
+            }
+            """
+    )
+
+    @Test
+    fun testEmptyConstructorWithIncorrectParameter_kt() {
+        val source = ktSource(
+            "TestNonEmptyConstructor",
+            """
+            package test
+            import javax.inject.Inject
+            class TestNonEmptyConstructor @Inject constructor(invalid: Invalid)
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(FactoryProcessorProvider())
+            .failsToCompile()
+            .withLogContaining(
+                "Class test.TestNonEmptyConstructor has invalid parameters: [invalid]"
+            )
+    }
 }
