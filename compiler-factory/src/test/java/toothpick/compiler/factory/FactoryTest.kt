@@ -2069,8 +2069,8 @@ class FactoryTest {
             """
             package test
             import javax.inject.Inject
-            typealias TestTypeAlias = () -> String
-            class TestNonEmptyConstructor @Inject constructor(testTypeAlias: TestTypeAlias)
+            typealias TestTypeAlias<Entity, Param> = (param: Param) -> Entity
+            class TestNonEmptyConstructor @Inject constructor(testTypeAlias: TestTypeAlias<String, Int>)
             """
         )
 
@@ -2087,7 +2087,8 @@ class FactoryTest {
             package test
             
             import kotlin.Boolean
-            import kotlin.Function0
+            import kotlin.Function1
+            import kotlin.Int
             import kotlin.String
             import kotlin.Suppress
             import toothpick.Factory
@@ -2104,7 +2105,7 @@ class FactoryTest {
               )
               public override fun createInstance(scope: Scope): TestNonEmptyConstructor {
                 val scope = getTargetScope(scope)
-                val param1 = scope.getInstance(Function0::class.java) as Function0<String>
+                val param1 = scope.getInstance(Function1::class.java) as TestTypeAlias<String, Int>
                 return TestNonEmptyConstructor(param1)
               }
             
