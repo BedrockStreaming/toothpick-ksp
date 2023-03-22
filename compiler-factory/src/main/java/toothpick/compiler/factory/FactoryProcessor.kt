@@ -267,7 +267,6 @@ class FactoryProcessor(
         }
 
         return invalidParams.isEmpty()
-
     }
 
     private fun KSFunctionDeclaration.createConstructorInjectionTarget(resolver: Resolver): ConstructorInjectionTarget {

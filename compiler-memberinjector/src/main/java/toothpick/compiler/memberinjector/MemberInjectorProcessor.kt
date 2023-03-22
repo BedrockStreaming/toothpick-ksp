@@ -169,7 +169,6 @@ class MemberInjectorProcessor(
         }
 
         return isValidProperty
-
     }
 
     private fun KSFunctionDeclaration.isValidInjectAnnotatedMethod(): Boolean {
