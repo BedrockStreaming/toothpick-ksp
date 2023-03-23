@@ -820,7 +820,7 @@ class MethodMemberInjectorTest {
             """
             package test
             import javax.inject.Inject
-            typealias TestTypeAlias = () -> String
+            typealias TestTypeAlias = String
             class TestMethodInjection {
               @Inject
               fun m(testTypeAlias: TestTypeAlias) {}
@@ -840,7 +840,6 @@ class MethodMemberInjectorTest {
         """
             package test
             
-            import kotlin.Function0
             import kotlin.String
             import kotlin.Suppress
             import kotlin.Unit
@@ -854,7 +853,56 @@ class MethodMemberInjectorTest {
             )
             public class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
               public override fun inject(target: TestMethodInjection, scope: Scope): Unit {
-                val param1 = scope.getInstance(Function0::class.java) as Function0<String>
+                val param1 = scope.getInstance(String::class.java) as TestTypeAlias
+                target.m(param1)
+              }
+            }
+            """
+    )
+
+    @Test
+    fun testMethodInjectionWithTypeAliasAndGeneric_kt() {
+        val source = ktSource(
+            "TestMethodInjection",
+            """
+            package test
+            import javax.inject.Inject
+            typealias TestTypeAlias<Entity, Param> = (param: Param) -> Entity
+            class TestMethodInjection {
+              @Inject
+              fun m(testTypeAlias: TestTypeAlias<String, Int>) {}
+            }
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(MemberInjectorProcessorProvider())
+            .compilesWithoutError()
+            .generatesSources(testMethodInjectionWithTypeAliasAndGeneric_expected)
+    }
+
+    private val testMethodInjectionWithTypeAliasAndGeneric_expected = expectedKtSource(
+        "test/TestMethodInjection__MemberInjector",
+        """
+            package test
+            
+            import kotlin.Function1
+            import kotlin.Int
+            import kotlin.String
+            import kotlin.Suppress
+            import kotlin.Unit
+            import toothpick.MemberInjector
+            import toothpick.Scope
+            
+            @Suppress(
+              "ClassName",
+              "RedundantVisibilityModifier",
+              "UNCHECKED_CAST",
+            )
+            public class TestMethodInjection__MemberInjector : MemberInjector<TestMethodInjection> {
+              public override fun inject(target: TestMethodInjection, scope: Scope): Unit {
+                val param1 = scope.getInstance(Function1::class.java) as TestTypeAlias<String, Int>
                 target.m(param1)
               }
             }

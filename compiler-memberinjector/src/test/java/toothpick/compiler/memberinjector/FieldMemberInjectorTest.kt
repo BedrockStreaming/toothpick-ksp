@@ -1513,7 +1513,7 @@ class FieldMemberInjectorTest {
             """
             package test
             import javax.inject.Inject
-            typealias TestTypeAlias = () -> String
+            typealias TestTypeAlias = String
             class TestFieldInjection {
               @Inject lateinit var testTypeAlias: TestTypeAlias
             }
@@ -1533,7 +1533,6 @@ class FieldMemberInjectorTest {
         """
             package test
             
-            import kotlin.Function0
             import kotlin.String
             import kotlin.Suppress
             import kotlin.Unit
@@ -1547,7 +1546,55 @@ class FieldMemberInjectorTest {
             )
             public class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
               public override fun inject(target: TestFieldInjection, scope: Scope): Unit {
-                target.testTypeAlias = scope.getInstance(Function0::class.java) as Function0<String>
+                target.testTypeAlias = scope.getInstance(String::class.java) as TestTypeAlias
+              }
+            }
+            """
+    )
+
+    @Test
+    fun testFieldInjectionWithTypeAliasAndGeneric_kt() {
+        val source = ktSource(
+            "TestFieldInjection",
+            """
+            package test
+            import javax.inject.Inject
+            typealias TestTypeAlias<Entity, Param> = (param: Param) -> Entity
+            class TestFieldInjection {
+              @Inject lateinit var testTypeAlias: TestTypeAlias<String, Int>
+            }
+            class Foo
+            """
+        )
+
+        compilationAssert()
+            .that(source)
+            .processedWith(MemberInjectorProcessorProvider())
+            .compilesWithoutError()
+            .generatesSources(testFieldInjectionWithTypeAliasAndGeneric_expected)
+    }
+
+    private val testFieldInjectionWithTypeAliasAndGeneric_expected = expectedKtSource(
+        "test/TestFieldInjection__MemberInjector",
+        """
+            package test
+            
+            import kotlin.Function1
+            import kotlin.Int
+            import kotlin.String
+            import kotlin.Suppress
+            import kotlin.Unit
+            import toothpick.MemberInjector
+            import toothpick.Scope
+            
+            @Suppress(
+              "ClassName",
+              "RedundantVisibilityModifier",
+              "UNCHECKED_CAST",
+            )
+            public class TestFieldInjection__MemberInjector : MemberInjector<TestFieldInjection> {
+              public override fun inject(target: TestFieldInjection, scope: Scope): Unit {
+                target.testTypeAlias = scope.getInstance(Function1::class.java) as TestTypeAlias<String, Int>
               }
             }
             """
