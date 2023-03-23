@@ -118,9 +118,15 @@ sealed class VariableInjectionTarget(
                 val actualTypeClassName = type.findActualType().toClassName()
                 val argumentsTypeNames = type.arguments.map { it.type!!.resolve().toTypeName() }
 
+                val typeName = if (argumentsTypeNames.isNotEmpty()) {
+                    type.declaration.toClassName().parameterizedBy(argumentsTypeNames)
+                } else {
+                    type.toTypeName()
+                }
+
                 Instance(
                     className = actualTypeClassName,
-                    typeName = type.declaration.toClassName().parameterizedBy(argumentsTypeNames),
+                    typeName = typeName,
                     memberName = name,
                     qualifierName = qualifierName
                 )
