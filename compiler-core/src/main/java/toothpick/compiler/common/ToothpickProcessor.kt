@@ -48,7 +48,7 @@ import javax.inject.Inject
 abstract class ToothpickProcessor(
     processorOptions: Map<String, String>,
     private val codeGenerator: CodeGenerator,
-    protected val logger: KSPLogger
+    protected val logger: KSPLogger,
 ) : SymbolProcessor {
 
     protected val options = processorOptions.readOptions()
@@ -66,9 +66,11 @@ abstract class ToothpickProcessor(
     }
 
     protected fun KSType.isValidInjectedType(node: KSNode, qualifiedName: String?): Boolean {
-        return if (isError) false
-        else if (!isValidInjectedClassKind() && !isTypeAlias()) false
-        else !isProviderOrLazy() || isValidProviderOrLazy(node, qualifiedName)
+        return when {
+            isError -> false
+            !isValidInjectedClassKind() && !isTypeAlias() -> false
+            else -> !isProviderOrLazy() || isValidProviderOrLazy(node, qualifiedName)
+        }
     }
 
     private fun KSType.isValidInjectedClassKind(): Boolean =
@@ -100,7 +102,8 @@ abstract class ToothpickProcessor(
         val firstArgumentArgumentType = firstArgumentArgument.type?.resolve()?.declaration?.qualifiedName?.asString()
 
         val isArgumentStar = firstArgumentArgument.variance == Variance.STAR
-        val isArgumentAny = firstArgumentArgument.variance == Variance.INVARIANT && firstArgumentArgumentType == Any::class.qualifiedName
+        val isArgumentAny =
+            firstArgumentArgument.variance == Variance.INVARIANT && firstArgumentArgumentType == Any::class.qualifiedName
         val areValidArguments = firstArgumentArguments.size <= 1 && (isArgumentStar || isArgumentAny)
 
         if (!areValidArguments) {
