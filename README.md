@@ -15,7 +15,7 @@ projects: KSP (Kotlin Symbol Processor). This API is much faster than `kapt` on 
 This projects aims to reimplement Toothpick's annotation processor with Kotlin-based technologies. It now uses KSP for
 better build performance, and generates Kotlin code for improved type safety.
 
-> **Important note:** This processor is mostly a drop-in replacement for the official `kapt` processor, but compatibility was *not* a main goal. You might need to make small changes to your code in order to build using this module.
+> **Important note:** This processor is mostly a drop-in replacement for the official `kapt` processor, but source compatibility was *not* a main goal. You might need to make small changes to your code when migrating from `apt`/`kapt` to KSP.
 >
 > This is in part because of fundamental differences in the way KSP models Kotlin code compared to `kapt`, and in part because of the differences in generated Kotlin code vs. Java code (no `package` visibility modifier, for example.)
 
@@ -39,7 +39,8 @@ dependencies {
     // Remove this:
     // kapt("com.github.stephanenicolas.toothpick:toothpick-compiler:...")
 
-    ksp("com.github.BedrockStreaming.toothpick-ksp:compiler:1.0.0")
+    // Replace the version number with the latest GitHub release
+    ksp("com.github.BedrockStreaming.toothpick-ksp:compiler:<latest-version>")
 }
 
 ksp {
