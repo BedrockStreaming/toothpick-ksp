@@ -32,6 +32,7 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.Variance
 import com.squareup.kotlinpoet.ksp.writeTo
 import toothpick.compiler.common.generators.TPCodeGenerator
@@ -47,7 +48,7 @@ import javax.inject.Inject
 abstract class ToothpickProcessor(
     processorOptions: Map<String, String>,
     private val codeGenerator: CodeGenerator,
-    protected val logger: KSPLogger
+    protected val logger: KSPLogger,
 ) : SymbolProcessor {
 
     protected val options = processorOptions.readOptions()
@@ -65,12 +66,17 @@ abstract class ToothpickProcessor(
     }
 
     protected fun KSType.isValidInjectedType(node: KSNode, qualifiedName: String?): Boolean {
-        return if (!isValidInjectedClassKind()) false
-        else !isProviderOrLazy() || isValidProviderOrLazy(node, qualifiedName)
+        return when {
+            isError -> false
+            !isValidInjectedClassKind() && !isTypeAlias() -> false
+            else -> !isProviderOrLazy() || isValidProviderOrLazy(node, qualifiedName)
+        }
     }
 
     private fun KSType.isValidInjectedClassKind(): Boolean =
         (declaration as? KSClassDeclaration)?.classKind in validInjectableTypes
+
+    private fun KSType.isTypeAlias(): Boolean = declaration is KSTypeAlias
 
     private fun KSType.isValidProviderOrLazy(node: KSNode, qualifiedName: String?): Boolean {
         // e.g. Provider<Foo<String>>
@@ -96,7 +102,8 @@ abstract class ToothpickProcessor(
         val firstArgumentArgumentType = firstArgumentArgument.type?.resolve()?.declaration?.qualifiedName?.asString()
 
         val isArgumentStar = firstArgumentArgument.variance == Variance.STAR
-        val isArgumentAny = firstArgumentArgument.variance == Variance.INVARIANT && firstArgumentArgumentType == Any::class.qualifiedName
+        val isArgumentAny =
+            firstArgumentArgument.variance == Variance.INVARIANT && firstArgumentArgumentType == Any::class.qualifiedName
         val areValidArguments = firstArgumentArguments.size <= 1 && (isArgumentStar || isArgumentAny)
 
         if (!areValidArguments) {
