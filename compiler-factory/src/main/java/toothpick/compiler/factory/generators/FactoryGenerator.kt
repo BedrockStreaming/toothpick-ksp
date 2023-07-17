@@ -27,11 +27,13 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toKModifier
+import com.squareup.kotlinpoet.ksp.toTypeName
 import toothpick.Factory
 import toothpick.MemberInjector
 import toothpick.Scope
@@ -57,6 +59,8 @@ internal class FactoryGenerator(
 
     val sourceClassName: ClassName = sourceClass.toClassName()
     val generatedClassName: ClassName = sourceClassName.factoryClassName
+    private val returnTypeName: TypeName = sourceClass.asStarProjectedType().toTypeName()
+    private val parameters = constructorInjectionTarget.parameters
 
     override fun brewCode(): FileSpec {
         return FileSpec.get(
@@ -65,7 +69,7 @@ internal class FactoryGenerator(
                 .addOriginatingKSFile(sourceClass.containingFile!!)
                 .addModifiers(getNestingAwareModifier() ?: KModifier.PUBLIC)
                 .addSuperinterface(
-                    Factory::class.asClassName().parameterizedBy(sourceClassName)
+                    Factory::class.asClassName().parameterizedBy(returnTypeName)
                 )
                 .addAnnotation(
                     AnnotationSpec.builder(Suppress::class)
@@ -139,18 +143,17 @@ internal class FactoryGenerator(
     }
 
     private fun TypeSpec.Builder.emitCreateInstance(): TypeSpec.Builder = apply {
-        val useTargetScope = with(constructorInjectionTarget) {
-            parameters.isNotEmpty() || superClassThatNeedsMemberInjection != null
-        }
+        val useTargetScope =
+            parameters.isNotEmpty() || constructorInjectionTarget.superClassThatNeedsMemberInjection != null
 
         FunSpec.builder("createInstance")
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("scope", Scope::class)
-            .returns(sourceClassName)
+            .returns(returnTypeName)
             .apply {
                 AnnotationSpec.builder(Suppress::class)
                     .apply {
-                        if (constructorInjectionTarget.parameters.isNotEmpty()) {
+                        if (parameters.isNotEmpty()) {
                             addMember("%S", "UNCHECKED_CAST")
                         }
 
@@ -175,10 +178,10 @@ internal class FactoryGenerator(
                             addStatement("val scope = getTargetScope(scope)")
                         }
 
-                        constructorInjectionTarget.parameters.forEachIndexed { i, param ->
+                        parameters.forEach { param ->
                             addStatement(
                                 "val %N = scope.%L as %T",
-                                "param${i + 1}",
+                                param.memberName.asString(),
                                 param.getInvokeScopeGetMethodWithNameCodeBlock(),
                                 param.getParamType()
                             )
@@ -186,10 +189,9 @@ internal class FactoryGenerator(
 
                         if (!constructorInjectionTarget.isObject) {
                             addStatement(
-                                "return %T(%L)",
+                                "return %T(${parameters.joinToString(", ") { "%L" }})",
                                 sourceClassName,
-                                List(constructorInjectionTarget.parameters.size) { i -> "param${i + 1}" }
-                                    .joinToString(", ")
+                                *parameters.map { param -> param.memberName.asString() }.toTypedArray()
                             )
                         } else {
                             addStatement("return %T", sourceClassName)

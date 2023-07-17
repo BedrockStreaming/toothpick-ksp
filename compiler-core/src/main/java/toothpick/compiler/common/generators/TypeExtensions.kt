@@ -19,7 +19,13 @@ package toothpick.compiler.common.generators
 
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSType
+import com.squareup.kotlinpoet.STAR
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.ksp.TypeParameterResolver
+import com.squareup.kotlinpoet.ksp.toTypeName
 
 /**
  * Alternative to [com.google.devtools.ksp.getAnnotationsByType] that retrieves [KSAnnotation]s instead.
@@ -29,5 +35,18 @@ inline fun <reified T : Annotation> KSAnnotated.getAnnotationsByType(): Sequence
         val className = T::class.asClassName()
         annotation.shortName.asString() == className.simpleName &&
             annotation.annotationType.resolve().declaration.qualifiedName?.asString() == className.canonicalName
+    }
+}
+
+fun KSType.toErasedTypeName(): TypeName {
+    return toTypeName(STAR_RESOLVER)
+}
+
+private val STAR_RESOLVER = object : TypeParameterResolver {
+    override val parametersMap = emptyMap<String, TypeVariableName>()
+
+    override fun get(index: String) = when (index) {
+        "T" -> TypeVariableName("*", STAR)
+        else -> throw NoSuchElementException("No TypeParameter found for index $index")
     }
 }

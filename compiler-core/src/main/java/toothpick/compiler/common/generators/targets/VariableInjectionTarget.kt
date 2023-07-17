@@ -24,21 +24,15 @@ import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.isLocal
 import com.google.devtools.ksp.processing.KSPLogger
-import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSName
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSType
-import com.google.devtools.ksp.symbol.KSTypeAlias
-import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.*
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.ksp.toClassName
-import com.squareup.kotlinpoet.ksp.toTypeName
 import toothpick.compiler.common.generators.error
+import toothpick.compiler.common.generators.toErasedTypeName
 import javax.inject.Named
 import javax.inject.Qualifier
 
@@ -100,6 +94,7 @@ sealed class VariableInjectionTarget(
                         qualifierName = qualifierName
                     )
                 }
+
                 toothpick.Lazy::class.qualifiedName -> {
                     val kindParamClass = type.getInjectedType()
 
@@ -110,38 +105,31 @@ sealed class VariableInjectionTarget(
                         qualifierName = qualifierName
                     )
                 }
+
                 else -> createInstanceTarget(name, type, qualifierName)
             }
 
         private fun createInstanceTarget(name: KSName, type: KSType, qualifierName: String?): Instance {
-            return if (type.declaration is KSTypeAlias) {
-                val actualTypeClassName = type.findActualType().toClassName()
-                val argumentsTypeNames = type.arguments.map { it.type!!.resolve().toTypeName() }
-
-                val typeName = if (argumentsTypeNames.isNotEmpty()) {
-                    type.declaration.toClassName().parameterizedBy(argumentsTypeNames)
-                } else {
-                    type.toTypeName()
+            val actualTypeClassName = type.findActualType().toClassName()
+            val erasedTypeName = if (type.arguments.isNotEmpty()) {
+                val arguments = type.arguments.map {
+                    it.type!!.resolve().toErasedTypeName()
                 }
-
-                Instance(
-                    className = actualTypeClassName,
-                    typeName = typeName,
-                    memberName = name,
-                    qualifierName = qualifierName
-                )
+                type.declaration.toClassName().parameterizedBy(arguments)
             } else {
-                Instance(
-                    className = type.toClassName(),
-                    typeName = type.toTypeName(),
-                    memberName = name,
-                    qualifierName = qualifierName
-                )
+                type.toErasedTypeName()
             }
+
+            return Instance(
+                className = actualTypeClassName,
+                typeName = erasedTypeName,
+                memberName = name,
+                qualifierName = qualifierName
+            )
         }
 
         private fun KSType.toParameterizedTypeName(kindParamClass: KSType): ParameterizedTypeName =
-            toClassName().parameterizedBy(kindParamClass.toTypeName())
+            toClassName().parameterizedBy(kindParamClass.toErasedTypeName())
 
         /**
          * Lookup both [javax.inject.Qualifier] and [javax.inject.Named] to provide the name
