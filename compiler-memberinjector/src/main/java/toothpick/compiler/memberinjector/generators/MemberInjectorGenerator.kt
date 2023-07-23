@@ -29,16 +29,17 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
-import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toKModifier
 import com.squareup.kotlinpoet.ksp.toTypeName
 import toothpick.MemberInjector
 import toothpick.Scope
 import toothpick.compiler.common.generators.TPCodeGenerator
 import toothpick.compiler.common.generators.memberInjectorClassName
+import toothpick.compiler.common.generators.toClassName
 import toothpick.compiler.common.generators.targets.VariableInjectionTarget
 import toothpick.compiler.common.generators.targets.getInvokeScopeGetMethodWithNameCodeBlock
 import toothpick.compiler.common.generators.targets.getParamType
+import toothpick.compiler.common.generators.toClassName
 import toothpick.compiler.memberinjector.targets.MethodInjectionTarget
 import javax.inject.Inject
 

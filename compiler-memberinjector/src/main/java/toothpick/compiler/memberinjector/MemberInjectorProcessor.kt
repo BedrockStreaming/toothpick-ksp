@@ -24,9 +24,9 @@ import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.isInternal
 import com.google.devtools.ksp.isJavaPackagePrivate
 import com.google.devtools.ksp.isPrivate
-import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.FunctionKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -34,6 +34,8 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.Modifier
+import com.squareup.kotlinpoet.ksp.TypeParameterResolver
+import toothpick.compiler.common.BoundTypeParameterResolver
 import toothpick.compiler.common.ToothpickProcessor
 import toothpick.compiler.common.generators.error
 import toothpick.compiler.common.generators.info
@@ -55,27 +57,21 @@ import javax.inject.Inject
  *
  */
 @OptIn(KspExperimental::class)
-class MemberInjectorProcessor(
-    processorOptions: Map<String, String>,
-    codeGenerator: CodeGenerator,
-    logger: KSPLogger,
-) : ToothpickProcessor(
-    processorOptions, codeGenerator, logger
-) {
+class MemberInjectorProcessor(env: SymbolProcessorEnvironment) : ToothpickProcessor(env) {
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val injectedNodes: Sequence<KSAnnotated> =
-            resolver.getSymbolsWithAnnotation(Inject::class.qualifiedName!!)
-
-        val parentAndPropertiesToInject: Map<KSClassDeclaration, List<VariableInjectionTarget>> =
-            injectedNodes
-                .filterIsInstance<KSPropertyDeclaration>()
-                .mapNotNull { property -> property.getParentClassOrNull()?.let { parent -> parent to property } }
-                .filterNot { (parentClass, _) -> parentClass.isExcludedByFilters() }
-                .filter { (_, property) -> property.isValidInjectAnnotatedProperty() }
-                .groupBy(
-                    { (parentClass, _) -> parentClass },
-                    { (_, property) -> property.createFieldOrParamInjectionTarget() }
-                )
+        val injectedNodes: Sequence<KSAnnotated> = resolver.getSymbolsWithAnnotation(Inject::class.qualifiedName!!)
+        val parentAndPropertiesToInject: Map<KSClassDeclaration, List<VariableInjectionTarget>> = injectedNodes
+            .filterIsInstance<KSPropertyDeclaration>()
+            .mapNotNull { property -> property.getParentClassOrNull()?.let { parent -> parent to property } }
+            .filterNot { (parentClass, _) -> parentClass.isExcludedByFilters() }
+            .filter { (_, property) -> property.isValidInjectAnnotatedProperty() }
+            .groupBy(
+                { (parentClass, _) -> parentClass },
+                { (decl, property) ->
+                    val typeParameterResolver = BoundTypeParameterResolver(decl.typeParameters)
+                    property.createFieldOrParamInjectionTarget(typeParameterResolver)
+                }
+            )
 
         val parentAndMethodsToInject: Map<KSClassDeclaration, List<MethodInjectionTarget>> =
             injectedNodes
@@ -87,11 +83,12 @@ class MemberInjectorProcessor(
                 .filter { (_, method) -> method.isValidInjectAnnotatedMethod() }
                 .groupBy(
                     { (parentClass, _) -> parentClass },
-                    { (_, method) ->
+                    { (decl, method) ->
+                        val typeParameterResolver = BoundTypeParameterResolver(decl.typeParameters)
                         MethodInjectionTarget(
                             methodName = method.simpleName,
                             isOverride = method.isOverride(),
-                            parameters = method.getParamInjectionTargetList()
+                            parameters = method.getParamInjectionTargetList(typeParameterResolver)
                         )
                     }
                 )
@@ -125,8 +122,9 @@ class MemberInjectorProcessor(
         return emptyList()
     }
 
-    private fun KSPropertyDeclaration.createFieldOrParamInjectionTarget(): VariableInjectionTarget =
-        VariableInjectionTarget.create(this, logger)
+    private fun KSPropertyDeclaration.createFieldOrParamInjectionTarget(
+        typeParameterResolver: TypeParameterResolver
+    ): VariableInjectionTarget = VariableInjectionTarget.create(this, typeParameterResolver, logger)
 
     /**
      * Checks if a given method overrides an [Inject]-annotated method.

@@ -17,28 +17,21 @@
  */
 package toothpick.compiler.common.generators
 
+import com.google.devtools.ksp.isLocal
+import com.google.devtools.ksp.symbol.KSDeclaration
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.TypeName
 
 /**
- * The name of the generated factory class for a given class.
+ * Copied from ksp [com.squareup.kotlinpoet.ksp.toClassNameInternal]
+ * With it, we can create a correct type name for typealias (using [parameterizedBy])
+ * Otherwise, we lose the generic parameters
  */
-val ClassName.factoryClassName: ClassName
-    get() = ClassName(
-        packageName = packageName,
-        simpleNames.joinToString("$") + "__Factory"
-    )
-
-/**
- * The name of the generated member injector class for a given class.
- */
-val ClassName.memberInjectorClassName: ClassName
-    get() = ClassName(
-        packageName = packageName,
-        simpleNames.joinToString("$") + "__MemberInjector"
-    )
-
-fun ClassName.withTypeArguments(arguments: List<TypeName>): TypeName {
-    return if (arguments.isEmpty()) this else parameterizedBy(arguments)
+fun KSDeclaration.toClassName(): ClassName {
+    require(!isLocal()) { "Local/anonymous classes are not supported!" }
+    val pkgName = packageName.asString()
+    val simpleNames = checkNotNull(qualifiedName).asString()
+        .removePrefix("$pkgName.")
+        .split(".")
+    return ClassName(pkgName, simpleNames)
 }

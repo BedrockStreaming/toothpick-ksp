@@ -32,7 +32,8 @@ data class ToothpickOptions(
     ),
     val crashWhenNoFactoryCanBeCreated: Boolean = false,
     val crashWhenInjectedMethodIsNotPackageVisible: Boolean = false,
-    val verboseLogging: Boolean = false
+    val verboseLogging: Boolean = false,
+    val wrapScopeIntoWithControlFlow: Boolean = false
 ) {
 
     companion object {
@@ -79,6 +80,14 @@ data class ToothpickOptions(
          * Might be useful for debugging or test purposes.
          */
         const val VerboseLogging = "toothpick_verbose_log"
+
+        /**
+         * The name of the annotation processor option to use `with` control flow
+         * to avoid `NAME_SHADOWING` issue.
+         *
+         * Might be useful for debugging or test purposes.
+         */
+        const val WrapScopeIntoWithControlFlow = "toothpick_wrap_scope_into_with_control_flow"
     }
 }
 
@@ -104,6 +113,9 @@ fun Map<String, String>.readOptions(): ToothpickOptions {
             ?: default.crashWhenInjectedMethodIsNotPackageVisible,
         verboseLogging = this[ToothpickOptions.VerboseLogging]
             ?.toBoolean()
-            ?: default.verboseLogging
+            ?: default.verboseLogging,
+        wrapScopeIntoWithControlFlow = this[ToothpickOptions.WrapScopeIntoWithControlFlow]
+            ?.toBoolean()
+            ?: default.wrapScopeIntoWithControlFlow,
     )
 }

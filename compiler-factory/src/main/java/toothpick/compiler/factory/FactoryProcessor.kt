@@ -25,9 +25,9 @@ import com.google.devtools.ksp.isAbstract
 import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.isPrivate
-import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.FunctionKind
 import com.google.devtools.ksp.symbol.KSAnnotated
@@ -43,6 +43,7 @@ import toothpick.InjectConstructor
 import toothpick.ProvidesReleasable
 import toothpick.ProvidesSingleton
 import toothpick.Releasable
+import toothpick.compiler.common.BoundTypeParameterResolver
 import toothpick.compiler.common.ToothpickProcessor
 import toothpick.compiler.common.generators.error
 import toothpick.compiler.common.generators.info
@@ -81,28 +82,17 @@ import javax.inject.Singleton
  * Note that if a class is abstract, the relax mechanism doesn't generate a factory and raises no error.
  */
 @OptIn(KspExperimental::class)
-class FactoryProcessor(
-    processorOptions: Map<String, String>,
-    codeGenerator: CodeGenerator,
-    logger: KSPLogger
-) : ToothpickProcessor(
-    processorOptions, codeGenerator, logger
-) {
+class FactoryProcessor(env: SymbolProcessorEnvironment) : ToothpickProcessor(env) {
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val supportedAnnotationTypes: Set<KSClassDeclaration> =
-            options.supportedAnnotationTypes
-                .mapNotNull { className -> resolver.getClassDeclarationByName(className) }
-                .toSet()
-
         createFactoriesForClassesAnnotatedWithInjectConstructor(resolver)
             .plus(createFactoriesForClassesWithInjectAnnotatedConstructors(resolver))
             .plus(createFactoriesForClassesAnnotatedWith(resolver, ProvidesSingleton::class.qualifiedName!!))
             .plus(createFactoriesForClassesWithInjectAnnotatedFields(resolver))
             .plus(createFactoriesForClassesWithInjectAnnotatedMethods(resolver))
-            .plus(createFactoriesForClassesAnnotatedWithScopeAnnotations(resolver, supportedAnnotationTypes))
+            .plus(createFactoriesForClassesAnnotatedWithScopeAnnotations(resolver))
             .distinctBy { target -> target.sourceClass }
             .forEach { target ->
-                val factoryGenerator = FactoryGenerator(target)
+                val factoryGenerator = FactoryGenerator(target, options)
                 writeToFile(
                     tpCodeGenerator = factoryGenerator,
                     fileDescription = "Factory for type ${target.sourceClass.qualifiedName?.asString()}"
@@ -120,11 +110,9 @@ class FactoryProcessor(
         return emptyList()
     }
 
-    private fun createFactoriesForClassesAnnotatedWithScopeAnnotations(
-        resolver: Resolver,
-        annotations: Set<KSClassDeclaration>
-    ): Sequence<ConstructorInjectionTarget> {
-        return annotations.asSequence()
+    private fun createFactoriesForClassesAnnotatedWithScopeAnnotations(resolver: Resolver): Sequence<ConstructorInjectionTarget> {
+        return options.supportedAnnotationTypes.asSequence()
+            .mapNotNull { className -> resolver.getClassDeclarationByName(className) }
             .filter { annotation -> annotation.isAnnotationPresent(Scope::class) }
             .filter { annotation -> annotation.checkScopeAnnotationValidity() }
             .mapNotNull { annotation -> annotation.qualifiedName?.asString() }
@@ -284,6 +272,7 @@ class FactoryProcessor(
             )
         }
 
+        val typeParameterResolver = BoundTypeParameterResolver(parentClass.typeParameters)
         return ConstructorInjectionTarget(
             sourceClass = parentClass,
             scopeName = scopeName,
@@ -293,7 +282,7 @@ class FactoryProcessor(
             hasProvidesSingletonAnnotation = parentClass.isAnnotationPresent(ProvidesSingleton::class),
             hasProvidesReleasableAnnotation = parentClass.isAnnotationPresent(ProvidesReleasable::class),
             superClassThatNeedsMemberInjection = parentClass.getMostDirectSuperClassWithInjectedMembers(onlyParents = false),
-            parameters = getParamInjectionTargetList()
+            parameters = getParamInjectionTargetList(typeParameterResolver)
         )
     }
 
@@ -321,11 +310,11 @@ class FactoryProcessor(
 
         val cannotCreateAFactoryMessage = (
             "Toothpick can't create a factory for it. " +
-                "If this class is itself a DI entry point (i.e. you call TP.inject(this) at some point), " +
-                "then you can remove this warning by adding @Suppress(\"Injectable\") to the class. " +
-                "A typical example is a class using injection to assign its fields, that calls TP.inject(this), " +
-                "but it needs a parameter for its constructor and this parameter is not injectable."
-            )
+            "If this class is itself a DI entry point (i.e. you call TP.inject(this) at some point), " +
+            "then you can remove this warning by adding @Suppress(\"Injectable\") to the class. " +
+            "A typical example is a class using injection to assign its fields, that calls TP.inject(this), " +
+            "but it needs a parameter for its constructor and this parameter is not injectable."
+        )
 
         val defaultConstructor = constructors.firstOrNull { constructor ->
             constructor.parameters.isEmpty()

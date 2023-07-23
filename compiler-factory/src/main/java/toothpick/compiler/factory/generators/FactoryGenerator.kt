@@ -25,23 +25,25 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
-import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toKModifier
 import com.squareup.kotlinpoet.ksp.toTypeName
 import toothpick.Factory
 import toothpick.MemberInjector
 import toothpick.Scope
+import toothpick.compiler.common.ToothpickOptions
 import toothpick.compiler.common.generators.TPCodeGenerator
 import toothpick.compiler.common.generators.factoryClassName
 import toothpick.compiler.common.generators.memberInjectorClassName
 import toothpick.compiler.common.generators.targets.getInvokeScopeGetMethodWithNameCodeBlock
 import toothpick.compiler.common.generators.targets.getParamType
+import toothpick.compiler.common.generators.toClassName
 import toothpick.compiler.factory.targets.ConstructorInjectionTarget
 import javax.inject.Singleton
 
@@ -53,6 +55,7 @@ import javax.inject.Singleton
  */
 internal class FactoryGenerator(
     private val constructorInjectionTarget: ConstructorInjectionTarget,
+    private val toothpickOptions: ToothpickOptions,
 ) : TPCodeGenerator {
 
     private val sourceClass: KSClassDeclaration = constructorInjectionTarget.sourceClass
@@ -145,6 +148,9 @@ internal class FactoryGenerator(
     private fun TypeSpec.Builder.emitCreateInstance(): TypeSpec.Builder = apply {
         val useTargetScope =
             parameters.isNotEmpty() || constructorInjectionTarget.superClassThatNeedsMemberInjection != null
+        val scopeControlFlow = toothpickOptions.wrapScopeIntoWithControlFlow &&
+            constructorInjectionTarget.superClassThatNeedsMemberInjection == null
+        val needUncheckedCast = parameters.any { it.getParamType() is ParameterizedTypeName }
 
         FunSpec.builder("createInstance")
             .addModifiers(KModifier.OVERRIDE)
@@ -153,11 +159,11 @@ internal class FactoryGenerator(
             .apply {
                 AnnotationSpec.builder(Suppress::class)
                     .apply {
-                        if (parameters.isNotEmpty()) {
+                        if (needUncheckedCast) {
                             addMember("%S", "UNCHECKED_CAST")
                         }
 
-                        if (useTargetScope) {
+                        if (useTargetScope && !scopeControlFlow) {
                             addMember("%S", "NAME_SHADOWING")
                         }
                     }
@@ -171,35 +177,43 @@ internal class FactoryGenerator(
             .addCode(
                 CodeBlock.builder()
                     .apply {
-                        if (useTargetScope) {
-                            // change the scope to target scope so that all dependencies are created in the target scope
-                            // and the potential injection take place in the target scope too
-                            // We only need it when the constructor contains parameters or dependencies
-                            addStatement("val scope = getTargetScope(scope)")
+                        val scope = if (useTargetScope) "getTargetScope(scope)" else "scope"
+                        // change the scope to target scope so that all dependencies are created in the target scope
+                        // and the potential injection take place in the target scope too
+                        // We only need it when the constructor contains parameters or dependencies
+                        if (scopeControlFlow) {
+                             beginControlFlow("return with($scope)")
+                        } else if (useTargetScope) {
+                            addStatement("val scope = $scope")
                         }
 
-                        parameters.forEach { param ->
+                        val receiver = if (scopeControlFlow) "" else "scope."
+                        parameters.forEachIndexed { i, param ->
                             addStatement(
-                                "val %N = scope.%L as %T",
-                                param.memberName.asString(),
+                                "val %N = $receiver%L as %T",
+                                "param${1 + i}",
                                 param.getInvokeScopeGetMethodWithNameCodeBlock(),
                                 param.getParamType()
                             )
                         }
 
+                        val returnPrefix = if (scopeControlFlow) "" else "return "
                         if (!constructorInjectionTarget.isObject) {
                             addStatement(
-                                "return %T(${parameters.joinToString(", ") { "%L" }})",
+                                "$returnPrefix%T(${List(parameters.size) { i -> "param${1 + i}" }.joinToString()})",
                                 sourceClassName,
-                                *parameters.map { param -> param.memberName.asString() }.toTypedArray()
                             )
                         } else {
-                            addStatement("return %T", sourceClassName)
+                            addStatement("$returnPrefix%T", sourceClassName)
                         }
 
                         if (constructorInjectionTarget.superClassThatNeedsMemberInjection != null) {
                             beginControlFlow(".apply")
                             addStatement("memberInjector.inject(this, scope)")
+                            endControlFlow()
+                        }
+
+                        if (scopeControlFlow) {
                             endControlFlow()
                         }
                     }
