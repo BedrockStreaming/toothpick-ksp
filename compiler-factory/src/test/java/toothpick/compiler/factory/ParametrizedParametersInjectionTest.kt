@@ -26,34 +26,40 @@ import toothpick.compiler.ktSource
 import toothpick.compiler.processedWith
 import toothpick.compiler.that
 
-class DataRepositoryTest {
+@Suppress("PrivatePropertyName")
+class ParametrizedParametersInjectionTest {
 
     @Test
-    fun testDataRepository() {
-        val source = ktSource(
-            "TestDataRepository",
-            """
+    fun testParametrizedParametersInjection() {
+        compilationAssert()
+            .that(testParametrizedParametersInjection_source)
+            .processedWith(FactoryProcessorProvider())
+            .compilesWithoutError()
+            .generatesSources(testParametrizedParametersInjection_expected)
+    }
+
+    private val testParametrizedParametersInjection_source = ktSource(
+        "testParametrizedParametersInjection",
+        """
             package test
             import javax.inject.Inject
-            import kotlin.reflect.KClass
-            interface WebSocketClient
-            interface Dto<out T> { fun get(): T }
-            interface TestRepository<Network : Dto<Domain>, Domain : Any>
-            class TestDataRepository<Network : Dto<Domain>, Domain : Any> @Inject constructor(
-                private val webSocketClient: WebSocketClient,
-                private val tClass: KClass<Network>, 
-            ) : TestRepository<Network, Domain>
+            interface Nullable<out T> {
+                fun get(): T
+            }
+            interface TestRepository<Nullable : Nullable<T>, T : Any>
+            class TestParametrizedParametersInjection<T : Any> @Inject constructor(
+                private val repository: TestRepository<Nullable<T>, T>,
+            )
             """
-        )
+    )
 
-        val expected = expectedKtSource(
-            "test/TestDataRepository__Factory",
-            """
+    private val testParametrizedParametersInjection_expected = expectedKtSource(
+        "test/TestParametrizedParametersInjection__Factory",
+        """
             package test
 
             import kotlin.Boolean
             import kotlin.Suppress
-            import kotlin.reflect.KClass
             import toothpick.Factory
             import toothpick.Scope
 
@@ -61,16 +67,17 @@ class DataRepositoryTest {
               "ClassName",
               "RedundantVisibilityModifier",
             )
-            public class TestDataRepository__Factory : Factory<TestDataRepository<*, *>> {
+            public class TestParametrizedParametersInjection__Factory :
+                Factory<TestParametrizedParametersInjection<*>> {
               @Suppress(
                 "UNCHECKED_CAST",
                 "NAME_SHADOWING",
               )
-              public override fun createInstance(scope: Scope): TestDataRepository<*, *> {
+              public override fun createInstance(scope: Scope): TestParametrizedParametersInjection<*> {
                 val scope = getTargetScope(scope)
-                val param1 = scope.getInstance(WebSocketClient::class.java) as WebSocketClient
-                val param2 = scope.getInstance(KClass::class.java) as KClass<test.Dto<kotlin.Any>>
-                return TestDataRepository(param1, param2)
+                val param1 = scope.getInstance(TestRepository::class.java) as
+                    TestRepository<Nullable<kotlin.Any>, kotlin.Any>
+                return TestParametrizedParametersInjection(param1)
               }
 
               public override fun getTargetScope(scope: Scope): Scope = scope
@@ -86,12 +93,5 @@ class DataRepositoryTest {
               public override fun hasProvidesReleasableAnnotation(): Boolean = false
             }
             """
-        )
-
-        compilationAssert()
-            .that(source)
-            .processedWith(FactoryProcessorProvider())
-            .compilesWithoutError()
-            .generatesSources(expected)
-    }
+    )
 }

@@ -146,10 +146,9 @@ internal class FactoryGenerator(
     }
 
     private fun TypeSpec.Builder.emitCreateInstance(): TypeSpec.Builder = apply {
-        val useTargetScope =
-            parameters.isNotEmpty() || constructorInjectionTarget.superClassThatNeedsMemberInjection != null
-        val scopeControlFlow = toothpickOptions.wrapScopeIntoWithControlFlow &&
-            constructorInjectionTarget.superClassThatNeedsMemberInjection == null
+        val useTargetScope = with(constructorInjectionTarget) {
+            parameters.isNotEmpty() || superClassThatNeedsMemberInjection != null
+        }
         val needUncheckedCast = parameters.any { it.getParamType() is ParameterizedTypeName }
 
         FunSpec.builder("createInstance")
@@ -163,7 +162,7 @@ internal class FactoryGenerator(
                             addMember("%S", "UNCHECKED_CAST")
                         }
 
-                        if (useTargetScope && !scopeControlFlow) {
+                        if (useTargetScope) {
                             addMember("%S", "NAME_SHADOWING")
                         }
                     }
@@ -181,39 +180,31 @@ internal class FactoryGenerator(
                         // change the scope to target scope so that all dependencies are created in the target scope
                         // and the potential injection take place in the target scope too
                         // We only need it when the constructor contains parameters or dependencies
-                        if (scopeControlFlow) {
-                             beginControlFlow("return with($scope)")
-                        } else if (useTargetScope) {
+                        if (useTargetScope) {
                             addStatement("val scope = $scope")
                         }
 
-                        val receiver = if (scopeControlFlow) "" else "scope."
                         parameters.forEachIndexed { i, param ->
                             addStatement(
-                                "val %N = $receiver%L as %T",
+                                "val %N = scope.%L as %T",
                                 "param${1 + i}",
                                 param.getInvokeScopeGetMethodWithNameCodeBlock(),
                                 param.getParamType()
                             )
                         }
 
-                        val returnPrefix = if (scopeControlFlow) "" else "return "
                         if (!constructorInjectionTarget.isObject) {
                             addStatement(
-                                "$returnPrefix%T(${List(parameters.size) { i -> "param${1 + i}" }.joinToString()})",
+                                "return %T(${List(parameters.size) { i -> "param${1 + i}" }.joinToString()})",
                                 sourceClassName,
                             )
                         } else {
-                            addStatement("$returnPrefix%T", sourceClassName)
+                            addStatement("return %T", sourceClassName)
                         }
 
                         if (constructorInjectionTarget.superClassThatNeedsMemberInjection != null) {
                             beginControlFlow(".apply")
                             addStatement("memberInjector.inject(this, scope)")
-                            endControlFlow()
-                        }
-
-                        if (scopeControlFlow) {
                             endControlFlow()
                         }
                     }

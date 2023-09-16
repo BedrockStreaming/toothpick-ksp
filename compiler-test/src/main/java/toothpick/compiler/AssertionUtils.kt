@@ -56,9 +56,6 @@ fun AssertInitial.processedWith(vararg symbolProcessorProviders: SymbolProcessor
 fun AssertInitial.withOptions(vararg kspOptions: Pair<String, String>): AssertInitial =
     copy(kspOptions = kspOptions.toMap())
 
-fun AssertInitial.logVerbose(): AssertInitial =
-    copy(logVerbose = true)
-
 private fun AssertInitial.asCompilation(): AssertCompilable {
     val builder = this
     return AssertCompilable(

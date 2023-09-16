@@ -23,7 +23,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
 /**
- * Copied from ksp [com.squareup.kotlinpoet.ksp.toClassNameInternal]
+ * Copied from KotlinPoet [com.squareup.kotlinpoet.ksp.toClassNameInternal]
  * With it, we can create a correct type name for typealias (using [parameterizedBy])
  * Otherwise, we lose the generic parameters
  */

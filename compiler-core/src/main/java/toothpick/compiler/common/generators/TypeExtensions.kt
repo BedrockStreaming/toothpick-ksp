@@ -17,15 +17,9 @@
  */
 package toothpick.compiler.common.generators
 
-import com.google.devtools.ksp.getClassDeclarationByName
-import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSDeclaration
-import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
-import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.Variance
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
@@ -48,32 +42,6 @@ inline fun <reified T : Annotation> KSAnnotated.getAnnotationsByType(): Sequence
             annotation.annotationType.resolve().declaration.qualifiedName?.asString() == className.canonicalName
     }
 }
-
-/**
- * Reified function to check if receiver [KSType] is assignable from [T] class
- */
-inline fun <reified T> KSType.isAssignableFrom(resolver: Resolver): Boolean {
-    val classDeclaration = requireNotNull(resolver.getClassDeclarationByName<T>()) {
-        "Unable to resolve ${KSClassDeclaration::class.simpleName} for type ${T::class.simpleName}"
-    }
-    return isAssignableFrom(classDeclaration.asStarProjectedType())
-}
-
-val KSTypeReference.declaration get() = resolve().declaration as KSClassDeclaration
-
-/**
- * @returns [KSAnnotation] for typed T or null if not found
- */
-inline fun <reified T> KSDeclaration.findAnnotation(resolver: Resolver): KSAnnotation? {
-    val annotationKsName = resolver.getKSNameFromString(T::class.simpleName!!)
-    return annotations.firstOrNull { it.shortName.asString() == annotationKsName.asString() }
-}
-
-// KSTypeParameter
-
-val KSType.singleTypeParameter get() = (declaration as KSTypeParameter).run { parentDeclaration!!.typeParameters.single { it.name == name } }
-
-val KSDeclaration.parentClassDeclaration get() = parentDeclaration as KSClassDeclaration
 
 val Variance.modifier
     get() = when (this) {

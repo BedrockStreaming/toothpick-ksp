@@ -35,7 +35,6 @@ import toothpick.MemberInjector
 import toothpick.Scope
 import toothpick.compiler.common.generators.TPCodeGenerator
 import toothpick.compiler.common.generators.memberInjectorClassName
-import toothpick.compiler.common.generators.toClassName
 import toothpick.compiler.common.generators.targets.VariableInjectionTarget
 import toothpick.compiler.common.generators.targets.getInvokeScopeGetMethodWithNameCodeBlock
 import toothpick.compiler.common.generators.targets.getParamType
