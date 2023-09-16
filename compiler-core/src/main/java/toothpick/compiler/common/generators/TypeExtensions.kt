@@ -19,7 +19,18 @@ package toothpick.compiler.common.generators
 
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
+import com.google.devtools.ksp.symbol.KSTypeParameter
+import com.google.devtools.ksp.symbol.Variance
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.STAR
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.TypeVariableName
+import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.ksp.TypeParameterResolver
+import com.squareup.kotlinpoet.ksp.toTypeName
 
 /**
  * Alternative to [com.google.devtools.ksp.getAnnotationsByType] that retrieves [KSAnnotation]s instead.
@@ -30,4 +41,33 @@ inline fun <reified T : Annotation> KSAnnotated.getAnnotationsByType(): Sequence
         annotation.shortName.asString() == className.simpleName &&
             annotation.annotationType.resolve().declaration.qualifiedName?.asString() == className.canonicalName
     }
+}
+
+val Variance.modifier
+    get() = when (this) {
+        Variance.COVARIANT -> KModifier.OUT
+        Variance.CONTRAVARIANT -> KModifier.IN
+        else -> null
+    }
+
+fun TypeName.toTypeVariableName(bounds: List<TypeName>, modifier: KModifier?) =
+    TypeVariableName(buildShortName(), bounds, modifier)
+
+fun TypeName.buildShortName(): String = when (this) {
+    is ClassName -> canonicalName
+    is TypeVariableName -> name
+    is WildcardTypeName -> when {
+        inTypes.size == 1 -> "in·${inTypes[0].buildShortName()}"
+        outTypes == STAR.outTypes -> "*"
+        else -> "out·${inTypes[0].buildShortName()}"
+    }
+    is ParameterizedTypeName ->
+        rawType.canonicalName + typeArguments.joinToString(", ", "<", ">") { it.buildShortName() }
+    else -> toString()
+}
+
+fun KSTypeParameter.toBoundTypeVariableName(typeParameterResolver: TypeParameterResolver): TypeVariableName {
+    val bounds = bounds.map { it.toTypeName(typeParameterResolver) }
+    return bounds.firstOrNull()?.toTypeVariableName(bounds.drop(1).toList(), variance.modifier)
+        ?: TypeVariableName("*", STAR)
 }

@@ -25,21 +25,25 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
-import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toKModifier
+import com.squareup.kotlinpoet.ksp.toTypeName
 import toothpick.Factory
 import toothpick.MemberInjector
 import toothpick.Scope
+import toothpick.compiler.common.ToothpickOptions
 import toothpick.compiler.common.generators.TPCodeGenerator
 import toothpick.compiler.common.generators.factoryClassName
 import toothpick.compiler.common.generators.memberInjectorClassName
 import toothpick.compiler.common.generators.targets.getInvokeScopeGetMethodWithNameCodeBlock
 import toothpick.compiler.common.generators.targets.getParamType
+import toothpick.compiler.common.generators.toClassName
 import toothpick.compiler.factory.targets.ConstructorInjectionTarget
 import javax.inject.Singleton
 
@@ -51,12 +55,15 @@ import javax.inject.Singleton
  */
 internal class FactoryGenerator(
     private val constructorInjectionTarget: ConstructorInjectionTarget,
+    private val toothpickOptions: ToothpickOptions,
 ) : TPCodeGenerator {
 
     private val sourceClass: KSClassDeclaration = constructorInjectionTarget.sourceClass
 
     val sourceClassName: ClassName = sourceClass.toClassName()
     val generatedClassName: ClassName = sourceClassName.factoryClassName
+    private val returnTypeName: TypeName = sourceClass.asStarProjectedType().toTypeName()
+    private val parameters = constructorInjectionTarget.parameters
 
     override fun brewCode(): FileSpec {
         return FileSpec.get(
@@ -65,7 +72,7 @@ internal class FactoryGenerator(
                 .addOriginatingKSFile(sourceClass.containingFile!!)
                 .addModifiers(getNestingAwareModifier() ?: KModifier.PUBLIC)
                 .addSuperinterface(
-                    Factory::class.asClassName().parameterizedBy(sourceClassName)
+                    Factory::class.asClassName().parameterizedBy(returnTypeName)
                 )
                 .addAnnotation(
                     AnnotationSpec.builder(Suppress::class)
@@ -142,15 +149,16 @@ internal class FactoryGenerator(
         val useTargetScope = with(constructorInjectionTarget) {
             parameters.isNotEmpty() || superClassThatNeedsMemberInjection != null
         }
+        val needUncheckedCast = parameters.any { it.getParamType() is ParameterizedTypeName }
 
         FunSpec.builder("createInstance")
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("scope", Scope::class)
-            .returns(sourceClassName)
+            .returns(returnTypeName)
             .apply {
                 AnnotationSpec.builder(Suppress::class)
                     .apply {
-                        if (constructorInjectionTarget.parameters.isNotEmpty()) {
+                        if (needUncheckedCast) {
                             addMember("%S", "UNCHECKED_CAST")
                         }
 
@@ -168,17 +176,18 @@ internal class FactoryGenerator(
             .addCode(
                 CodeBlock.builder()
                     .apply {
+                        val scope = if (useTargetScope) "getTargetScope(scope)" else "scope"
+                        // change the scope to target scope so that all dependencies are created in the target scope
+                        // and the potential injection take place in the target scope too
+                        // We only need it when the constructor contains parameters or dependencies
                         if (useTargetScope) {
-                            // change the scope to target scope so that all dependencies are created in the target scope
-                            // and the potential injection take place in the target scope too
-                            // We only need it when the constructor contains parameters or dependencies
-                            addStatement("val scope = getTargetScope(scope)")
+                            addStatement("val scope = $scope")
                         }
 
-                        constructorInjectionTarget.parameters.forEachIndexed { i, param ->
+                        parameters.forEachIndexed { i, param ->
                             addStatement(
                                 "val %N = scope.%L as %T",
-                                "param${i + 1}",
+                                "param${1 + i}",
                                 param.getInvokeScopeGetMethodWithNameCodeBlock(),
                                 param.getParamType()
                             )
@@ -186,10 +195,8 @@ internal class FactoryGenerator(
 
                         if (!constructorInjectionTarget.isObject) {
                             addStatement(
-                                "return %T(%L)",
+                                "return %T(${List(parameters.size) { i -> "param${1 + i}" }.joinToString()})",
                                 sourceClassName,
-                                List(constructorInjectionTarget.parameters.size) { i -> "param${i + 1}" }
-                                    .joinToString(", ")
                             )
                         } else {
                             addStatement("return %T", sourceClassName)

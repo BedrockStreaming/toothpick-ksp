@@ -25,6 +25,7 @@ import com.google.devtools.ksp.isPrivate
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -34,6 +35,7 @@ import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.Variance
+import com.squareup.kotlinpoet.ksp.TypeParameterResolver
 import com.squareup.kotlinpoet.ksp.writeTo
 import toothpick.compiler.common.generators.TPCodeGenerator
 import toothpick.compiler.common.generators.error
@@ -45,13 +47,11 @@ import java.io.IOException
 import javax.inject.Inject
 
 @OptIn(KspExperimental::class)
-abstract class ToothpickProcessor(
-    processorOptions: Map<String, String>,
-    private val codeGenerator: CodeGenerator,
-    protected val logger: KSPLogger,
-) : SymbolProcessor {
+abstract class ToothpickProcessor(env: SymbolProcessorEnvironment) : SymbolProcessor {
+    private val codeGenerator: CodeGenerator = env.codeGenerator
+    protected val logger: KSPLogger = env.logger
 
-    protected val options = processorOptions.readOptions()
+    protected val options = env.options.readOptions()
 
     protected fun writeToFile(tpCodeGenerator: TPCodeGenerator, fileDescription: String): Boolean {
         return try {
@@ -118,8 +118,10 @@ abstract class ToothpickProcessor(
         return true
     }
 
-    protected fun KSFunctionDeclaration.getParamInjectionTargetList(): List<VariableInjectionTarget> =
-        parameters.map { param -> VariableInjectionTarget.create(param, logger) }
+    protected fun KSFunctionDeclaration.getParamInjectionTargetList(
+        typeParameterResolver: TypeParameterResolver
+    ): List<VariableInjectionTarget> =
+        parameters.map { param -> VariableInjectionTarget.create(param, typeParameterResolver, logger) }
 
     protected fun KSDeclaration.isExcludedByFilters(): Boolean {
         val qualifiedName = qualifiedName?.asString() ?: return true

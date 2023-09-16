@@ -23,9 +23,5 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 class FactoryProcessorProvider : SymbolProcessorProvider {
 
     override fun create(environment: SymbolProcessorEnvironment) =
-        FactoryProcessor(
-            processorOptions = environment.options,
-            logger = environment.logger,
-            codeGenerator = environment.codeGenerator
-        )
+        FactoryProcessor(environment)
 }
