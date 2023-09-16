@@ -59,19 +59,21 @@ import javax.inject.Inject
 @OptIn(KspExperimental::class)
 class MemberInjectorProcessor(env: SymbolProcessorEnvironment) : ToothpickProcessor(env) {
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val injectedNodes: Sequence<KSAnnotated> = resolver.getSymbolsWithAnnotation(Inject::class.qualifiedName!!)
-        val parentAndPropertiesToInject: Map<KSClassDeclaration, List<VariableInjectionTarget>> = injectedNodes
-            .filterIsInstance<KSPropertyDeclaration>()
-            .mapNotNull { property -> property.getParentClassOrNull()?.let { parent -> parent to property } }
-            .filterNot { (parentClass, _) -> parentClass.isExcludedByFilters() }
-            .filter { (_, property) -> property.isValidInjectAnnotatedProperty() }
-            .groupBy(
-                { (parentClass, _) -> parentClass },
-                { (decl, property) ->
-                    val typeParameterResolver = BoundTypeParameterResolver(decl.typeParameters)
-                    property.createFieldOrParamInjectionTarget(typeParameterResolver)
-                }
-            )
+        val injectedNodes: Sequence<KSAnnotated> =
+            resolver.getSymbolsWithAnnotation(Inject::class.qualifiedName!!)
+        val parentAndPropertiesToInject: Map<KSClassDeclaration, List<VariableInjectionTarget>> =
+            injectedNodes
+                .filterIsInstance<KSPropertyDeclaration>()
+                .mapNotNull { property -> property.getParentClassOrNull()?.let { parent -> parent to property } }
+                .filterNot { (parentClass, _) -> parentClass.isExcludedByFilters() }
+                .filter { (_, property) -> property.isValidInjectAnnotatedProperty() }
+                .groupBy(
+                    { (parentClass, _) -> parentClass },
+                    { (decl, property) ->
+                        val typeParameterResolver = BoundTypeParameterResolver(decl.typeParameters)
+                        property.createFieldOrParamInjectionTarget(typeParameterResolver)
+                    }
+                )
 
         val parentAndMethodsToInject: Map<KSClassDeclaration, List<MethodInjectionTarget>> =
             injectedNodes

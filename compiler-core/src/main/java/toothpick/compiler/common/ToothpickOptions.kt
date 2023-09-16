@@ -104,6 +104,6 @@ fun Map<String, String>.readOptions(): ToothpickOptions {
             ?: default.crashWhenInjectedMethodIsNotPackageVisible,
         verboseLogging = this[ToothpickOptions.VerboseLogging]
             ?.toBoolean()
-            ?: default.verboseLogging,
+            ?: default.verboseLogging
     )
 }
