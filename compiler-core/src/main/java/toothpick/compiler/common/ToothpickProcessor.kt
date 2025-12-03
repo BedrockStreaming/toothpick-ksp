@@ -199,7 +199,13 @@ abstract class ToothpickProcessor(
         val javaAnnotations =
             getAnnotationsByType<SuppressWarnings>()
                 .flatMap { annotation ->
-                    annotation.arguments.map { arg -> arg.value as String }
+                    annotation.arguments.flatMap { arg ->
+                        when (val value = arg.value) {
+                            is String -> listOf(value)
+                            is Iterable<*> -> value.filterIsInstance<String>()
+                            else -> emptyList()
+                        }
+                    }
                 }
 
         return (kotlinAnnotations + javaAnnotations)
