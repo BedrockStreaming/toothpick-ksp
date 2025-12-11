@@ -19,24 +19,18 @@ package toothpick.compiler.factory.generators
 
 import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.squareup.kotlinpoet.AnnotationSpec
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toKModifier
 import toothpick.Factory
 import toothpick.MemberInjector
 import toothpick.Scope
+import toothpick.compiler.common.generators.GenericsHelper
 import toothpick.compiler.common.generators.TPCodeGenerator
 import toothpick.compiler.common.generators.factoryClassName
+import toothpick.compiler.common.generators.maybeStarParameterizedClassName
 import toothpick.compiler.common.generators.memberInjectorClassName
 import toothpick.compiler.common.generators.targets.getInvokeScopeGetMethodWithNameCodeBlock
 import toothpick.compiler.common.generators.targets.getParamType
@@ -57,6 +51,7 @@ internal class FactoryGenerator(
 
     val sourceClassName: ClassName = sourceClass.toClassName()
     val generatedClassName: ClassName = sourceClassName.factoryClassName
+    val parameterizedSourceClassname: TypeName = GenericsHelper.resolveGenericTypeToConstraint(sourceClass)
 
     override fun brewCode(): FileSpec {
         return FileSpec.get(
@@ -65,7 +60,7 @@ internal class FactoryGenerator(
                 .addOriginatingKSFile(sourceClass.containingFile!!)
                 .addModifiers(getNestingAwareModifier() ?: KModifier.PUBLIC)
                 .addSuperinterface(
-                    Factory::class.asClassName().parameterizedBy(sourceClassName)
+                    Factory::class.asClassName().parameterizedBy(sourceClass.maybeStarParameterizedClassName())
                 )
                 .addAnnotation(
                     AnnotationSpec.builder(Suppress::class)
@@ -121,16 +116,18 @@ internal class FactoryGenerator(
     }
 
     private fun TypeSpec.Builder.emitSuperMemberInjectorFieldIfNeeded() = apply {
-        val superTypeThatNeedsInjection: ClassName =
-            constructorInjectionTarget
+        val superTypeClass: KSClassDeclaration? = constructorInjectionTarget
                 .superClassThatNeedsMemberInjection
+        val superTypeThatNeedsInjection: ClassName = superTypeClass
                 ?.toClassName()
                 ?: return this
+
+        val superTypeClassNameWithGenerics = superTypeClass.maybeStarParameterizedClassName()
 
         PropertySpec
             .builder(
                 "memberInjector",
-                MemberInjector::class.asClassName().parameterizedBy(superTypeThatNeedsInjection),
+                MemberInjector::class.asClassName().parameterizedBy(superTypeClassNameWithGenerics),
                 KModifier.PRIVATE
             )
             .initializer("%T()", superTypeThatNeedsInjection.memberInjectorClassName)
@@ -146,7 +143,7 @@ internal class FactoryGenerator(
         FunSpec.builder("createInstance")
             .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
             .addParameter("scope", Scope::class)
-            .returns(sourceClassName)
+            .returns(parameterizedSourceClassname)
             .apply {
                 AnnotationSpec.builder(Suppress::class)
                     .apply {
@@ -187,12 +184,12 @@ internal class FactoryGenerator(
                         if (!constructorInjectionTarget.isObject) {
                             addStatement(
                                 "return %T(%L)",
-                                sourceClassName,
+                                parameterizedSourceClassname,
                                 List(constructorInjectionTarget.parameters.size) { i -> "param${i + 1}" }
                                     .joinToString(", ")
                             )
                         } else {
-                            addStatement("return %T", sourceClassName)
+                            addStatement("return %T", parameterizedSourceClassname)
                         }
 
                         if (constructorInjectionTarget.superClassThatNeedsMemberInjection != null) {
