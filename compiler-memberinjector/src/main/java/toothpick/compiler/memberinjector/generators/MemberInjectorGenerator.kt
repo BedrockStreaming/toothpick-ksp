@@ -19,17 +19,8 @@ package toothpick.compiler.memberinjector.generators
 
 import com.google.devtools.ksp.getVisibility
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.squareup.kotlinpoet.AnnotationSpec
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.STAR
-import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toKModifier
@@ -37,6 +28,7 @@ import com.squareup.kotlinpoet.ksp.toTypeName
 import toothpick.MemberInjector
 import toothpick.Scope
 import toothpick.compiler.common.generators.TPCodeGenerator
+import toothpick.compiler.common.generators.maybeStarParameterizedClassName
 import toothpick.compiler.common.generators.memberInjectorClassName
 import toothpick.compiler.common.generators.targets.VariableInjectionTarget
 import toothpick.compiler.common.generators.targets.getInvokeScopeGetMethodWithNameCodeBlock
@@ -62,7 +54,7 @@ internal class MemberInjectorGenerator(
         }
     }
 
-    private val parameterizedSourceClass: TypeName = sourceClass.maybeParameterizedClassName()
+    private val starParameterizedSourceClass: TypeName = sourceClass.maybeStarParameterizedClassName()
     val sourceClassName: ClassName = sourceClass.toClassName()
     val generatedClassName: ClassName = sourceClassName.memberInjectorClassName
 
@@ -73,7 +65,7 @@ internal class MemberInjectorGenerator(
                 .addOriginatingKSFile(sourceClass.containingFile!!)
                 .addModifiers(sourceClass.getVisibility().toKModifier() ?: KModifier.PUBLIC)
                 .addSuperinterface(
-                    MemberInjector::class.asClassName().parameterizedBy(parameterizedSourceClass)
+                    MemberInjector::class.asClassName().parameterizedBy(starParameterizedSourceClass)
                 )
                 .addAnnotation(
                     AnnotationSpec.builder(Suppress::class)
@@ -86,14 +78,6 @@ internal class MemberInjectorGenerator(
                 .emitInjectMethod(variableInjectionTargetList, methodInjectionTargetList)
                 .build()
         )
-    }
-
-    private fun KSClassDeclaration.maybeParameterizedClassName(): TypeName {
-        return if (this.typeParameters.isEmpty()) {
-            toClassName()
-        } else {
-            toClassName().parameterizedBy(this.typeParameters.map { STAR })
-        }
     }
 
     private fun TypeSpec.Builder.emitSuperMemberInjectorFieldIfNeeded(): TypeSpec.Builder = apply {
@@ -122,7 +106,7 @@ internal class MemberInjectorGenerator(
         addFunction(
             FunSpec.builder("inject")
                 .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
-                .addParameter("target", parameterizedSourceClass)
+                .addParameter("target", starParameterizedSourceClass)
                 .addParameter("scope", Scope::class)
                 .apply {
                     if (superClassThatNeedsInjection != null) {
