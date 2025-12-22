@@ -19,6 +19,8 @@ package toothpick.compiler.common
 
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.closestClassDeclaration
+import com.google.devtools.ksp.getDeclaredFunctions
+import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.isPrivate
@@ -151,10 +153,14 @@ abstract class ToothpickProcessor(
     }
 
     private fun KSClassDeclaration.hasInjectAnnotatedMembers(): Boolean {
-        // Ignore overridden members. They will be injected by the parent MemberInjector.
-        return getAllFunctions().filter { function -> function.findOverridee() == null && !function.isConstructor() }
-            .plus(getAllProperties().filter { property -> property.findOverridee() == null })
-            .any { member -> member.isAnnotationPresent(Inject::class) }
+        val declaredFunctions = getDeclaredFunctions()
+            .filter { fn -> !fn.isConstructor() && fn.findOverridee() == null }
+
+        val declaredProperties = getDeclaredProperties()
+            .filter { prop -> prop.findOverridee() == null }
+
+        val declared = declaredFunctions + declaredProperties
+        return declared.any { member -> member.isAnnotationPresent(Inject::class) }
     }
 
     protected fun KSDeclaration.getParentClassOrNull(): KSClassDeclaration? {
